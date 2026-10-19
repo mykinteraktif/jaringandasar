@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab Maya Jaringan Dasar</title>
+<style>
+:root{
+  --bg:#f2f5fa; --surface:#ffffff; --surface-2:#eef3f9; --ink:#0f1e33; --muted:#5a6a80; --line:#d8e1ec;
+  --primary:#1d5fd1; --primary-2:#174ca8; --primary-soft:#e4edff; --navy:#0b2447; --accent:#0aa5a5;
+  --ok:#13925a; --ok-soft:#e1f5ea; --bad:#d23c3c; --bad-soft:#fde9e9; --warn:#b97800; --warn-soft:#fff3d9;
+  --radius:14px; --shadow:0 2px 12px rgba(15,30,51,.07);
+  --mono:Consolas,"Cascadia Mono","Courier New",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+button{font:inherit}
+h1,h2,h3,h4{line-height:1.25;margin:0}
+p{margin:0}
+
+/* ===== Header & navigasi ===== */
+.sticky{position:sticky;top:0;z-index:60;box-shadow:0 2px 10px rgba(11,36,71,.12)}
+.topbar{background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand svg{flex:none}
+.brand b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand small{display:block;font-size:11.5px;opacity:.75;white-space:nowrap}
+.prog{display:flex;align-items:center;gap:8px;font-size:12px;flex:none}
+.prog .bar{width:120px;height:8px;background:rgba(255,255,255,.18);border-radius:99px;overflow:hidden}
+.prog .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#33cf98,#86f2cb);transition:width .6s}
+.tabs{background:var(--surface);border-bottom:1px solid var(--line);display:flex;gap:4px;overflow-x:auto;padding:6px 10px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{appearance:none;border:0;background:transparent;color:var(--muted);font-weight:600;font-size:14px;padding:8px 12px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap;flex:none}
+.tab .n{width:22px;height:22px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;font-size:12px}
+.tab.active{background:var(--primary-soft);color:var(--primary)}
+.tab.active .n{background:var(--primary);color:#fff}
+.tab.done .n{background:var(--ok);color:#fff}
+
+main{max-width:1180px;margin:0 auto;padding:18px 16px 40px}
+.page{display:none}
+.page.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ===== Komponen umum ===== */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+button.card{font:inherit;color:inherit;width:100%;cursor:pointer;appearance:none}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;font-size:14px;padding:9px 14px;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background .15s,transform .1s,border-color .15s;text-decoration:none}
+.btn:hover{border-color:#b7c4d6}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn.primary:hover{background:var(--primary-2)}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.ghost{background:transparent;border-color:rgba(255,255,255,.45);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--surface-2);color:var(--muted)}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.blue{background:var(--primary-soft);color:var(--primary)}
+.page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.page-head h2{font-size:clamp(20px,3vw,26px)}
+.page-head p{color:var(--muted);margin-top:4px;max-width:720px}
+.section-title{font-size:18px;margin:26px 0 12px}
+.alert{border-radius:12px;padding:12px 14px;font-size:14px;border:1px solid transparent}
+.alert.ok{background:var(--ok-soft);border-color:#b6e5cb;color:#0c5f3b}
+.alert.bad{background:var(--bad-soft);border-color:#f3c3c3;color:#8f2020}
+.alert.warn{background:var(--warn-soft);border-color:#f0d9a5;color:#7a5200}
+.alert.info{background:var(--primary-soft);border-color:#c5d7fb;color:#173f8a}
+.alert ul{margin:6px 0 0;padding-left:18px}
+.alert h4{margin-bottom:4px;font-size:15px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+
+/* ===== Beranda ===== */
+.hero{position:relative;border-radius:18px;overflow:hidden;color:#fff;padding:34px 28px;background:#0b2447 center/cover no-repeat;min-height:270px;display:flex;flex-direction:column;justify-content:flex-end;gap:12px}
+.hero::before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,rgba(8,26,56,.95) 0%,rgba(8,26,56,.78) 55%,rgba(8,26,56,.35) 100%)}
+.hero>*{position:relative}
+.hero .eyebrow{font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:#8fc1ff;font-weight:700}
+.hero h1{font-size:clamp(26px,4.4vw,40px)}
+.hero p{max-width:620px;color:#d6e2f5}
+.mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.mod{cursor:pointer;display:flex;flex-direction:column;gap:8px;transition:transform .15s,box-shadow .15s;text-align:left}
+.mod:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(15,30,51,.12)}
+.mod .thumb{background:var(--surface-2);border-radius:10px;aspect-ratio:16/10;display:grid;place-items:center;padding:8px}
+.mod .thumb img{max-height:100%;object-fit:contain}
+.mod h3{font-size:16px}
+.mod .bar{height:6px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.mod .bar i{display:block;height:100%;background:var(--ok);width:0;transition:width .5s}
+.tabs-inline{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs-inline button{appearance:none;border:1px solid var(--line);background:var(--surface);padding:7px 12px;border-radius:9px;font-weight:600;font-size:13.5px;cursor:pointer;color:var(--muted)}
+.tabs-inline button.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.cp-item{border-left:4px solid var(--primary);background:var(--surface-2);border-radius:8px;padding:10px 14px;margin-bottom:10px}
+.cp-item b{display:block;margin-bottom:2px}
+.tbl-wrap{overflow-x:auto}
+table.tbl{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}
+.tbl th,.tbl td{border:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+.tbl th{background:var(--navy);color:#fff;font-weight:600}
+.tbl tr:nth-child(even) td{background:#f8fafd}
+ol.steps-list{margin:0;padding-left:20px}
+ol.steps-list li{margin-bottom:6px}
+.asset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.asset{border:1px solid var(--line);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:6px;background:var(--surface)}
+.asset .im{background:repeating-conic-gradient(#eef2f7 0% 25%,#fff 0% 50%) 50%/16px 16px;border-radius:8px;aspect-ratio:1;display:grid;place-items:center;padding:6px}
+.asset .im img{max-height:100%;object-fit:contain}
+.asset code{font-family:var(--mono);font-size:12px;word-break:break-all}
+.credit{margin-top:28px;text-align:center;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+.credit b{color:var(--ink)}
+
+/* ===== Kenali Perangkat ===== */
+.filter{display:flex;gap:6px;flex-wrap:wrap}
+.dev-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.dev{position:relative;cursor:pointer;padding:12px;display:flex;flex-direction:column;gap:6px;text-align:left;transition:transform .15s,border-color .15s}
+.dev:hover{transform:translateY(-2px);border-color:#9fb6da}
+.dev .im{background:var(--surface-2);border-radius:10px;aspect-ratio:1;display:grid;place-items:center;padding:10px}
+.dev .im img{max-height:100%;object-fit:contain}
+.dev b{font-size:14.5px}
+.dev .seen{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;background:var(--ok);color:#fff;display:none;place-items:center;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.dev.viewed .seen{display:grid}
+.modal{position:fixed;inset:0;background:rgba(9,20,40,.58);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
+.modal.open{display:flex;animation:fade .2s}
+.modal-box{background:var(--surface);border-radius:16px;max-width:680px;width:100%;max-height:92vh;overflow:auto;padding:22px;position:relative}
+.modal-close{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:50%;border:0;background:var(--surface-2);cursor:pointer;font-size:18px}
+.detail{display:grid;grid-template-columns:190px 1fr;gap:18px}
+.detail .im{background:var(--surface-2);border-radius:12px;aspect-ratio:1;display:grid;place-items:center;padding:12px}
+.detail .im img{max-height:100%;object-fit:contain}
+.detail h3{font-size:21px;margin:6px 0 8px}
+.detail ul{margin:6px 0 10px;padding-left:18px}
+.detail .lbl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--primary);margin-top:10px}
+@media(max-width:560px){.detail{grid-template-columns:1fr}.detail .im{max-width:200px;margin:0 auto}}
+
+/* ===== Lab Crimping ===== */
+.stepper{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
+.stepper::-webkit-scrollbar{display:none}
+.st{flex:1;min-width:92px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--muted);text-align:center}
+.st .c{width:30px;height:30px;border-radius:50%;background:var(--surface-2);border:2px solid var(--line);display:grid;place-items:center;font-size:13px}
+.st.active{color:var(--primary)}
+.st.active .c{background:var(--primary);border-color:var(--primary);color:#fff}
+.st.done .c{background:var(--ok);border-color:var(--ok);color:#fff}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.choice-grid{grid-template-columns:1fr}}
+.choice{cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:8px;border:2px solid var(--line);transition:border-color .15s,transform .15s}
+.choice:hover{border-color:var(--primary);transform:translateY(-2px)}
+.choice .pair{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--surface-2);border-radius:10px;padding:10px}
+.choice .pair img{width:72px;height:72px;object-fit:contain}
+.choice .pair .ln{flex:1;max-width:80px;height:6px;border-radius:3px;background:#2f6fe0}
+.choice h3{font-size:17px}
+.conn{background:linear-gradient(180deg,#e8f0fb,#d6e3f4);border:2px solid #9db2cf;border-radius:14px 14px 22px 22px;padding:12px 12px 16px;max-width:460px;margin:8px auto 4px;position:relative}
+.conn-pins{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-bottom:6px}
+.conn-pins span{height:16px;border-radius:2px;background:linear-gradient(180deg,#f4cf4f,#c99a0c);display:block}
+.conn-slots{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+.slot{appearance:none;height:120px;border:2px dashed #a9b8cc;border-radius:6px;background:rgba(255,255,255,.55);cursor:pointer;position:relative;padding:0;display:flex;align-items:flex-end;justify-content:center}
+.slot.filled{border:1px solid rgba(0,0,0,.25);border-style:solid}
+.slot .no{position:absolute;bottom:-22px;left:0;right:0;font-size:12px;font-weight:700;color:var(--muted);text-align:center}
+.slot .nm{writing-mode:vertical-rl;transform:rotate(180deg);font-size:11px;font-weight:700;color:#fff;background:rgba(15,30,51,.72);border-radius:5px;padding:6px 2px;margin-bottom:6px;line-height:1.1}
+.slot.err{outline:3px solid var(--bad);outline-offset:2px}
+.conn-cap{text-align:center;font-size:12px;color:var(--muted);margin-top:26px}
+.palette{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:14px}
+.wire{appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px;cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;text-align:left}
+.wire:hover{border-color:var(--primary)}
+.wire .sw{width:34px;height:14px;border-radius:7px;flex:none;border:1px solid rgba(0,0,0,.2)}
+.proc{display:grid;gap:8px}
+.proc button{appearance:none;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:11px 12px;cursor:pointer;font-size:14px;display:flex;gap:10px;align-items:flex-start}
+.proc button:hover{border-color:var(--primary)}
+.proc button .k{flex:none;width:24px;height:24px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;font-size:12px;font-weight:700}
+.proc button.done{background:var(--ok-soft);border-color:#b6e5cb;cursor:default}
+.proc button.done .k{background:var(--ok);color:#fff}
+.shake{animation:shake .35s}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.tools-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+.tools-row img{width:96px;height:96px;object-fit:contain;background:var(--surface-2);border-radius:12px;padding:6px}
+.crimp-anim{animation:press .5s ease 2}
+@keyframes press{50%{transform:scale(.88) rotate(-4deg)}}
+.tester{display:grid;grid-template-columns:200px 1fr;gap:18px;align-items:center}
+@media(max-width:640px){.tester{grid-template-columns:1fr}.tester>img{max-width:180px;margin:0 auto}}
+.tester>img{background:var(--surface-2);border-radius:12px;padding:8px}
+.led-panel{background:#16202e;border-radius:14px;padding:14px;color:#cfd8e6}
+.led-row{display:grid;grid-template-columns:62px repeat(8,1fr);gap:6px;align-items:center;margin-bottom:10px}
+.led-row:last-child{margin-bottom:0}
+.led-row .lb{font-size:12px;font-weight:700}
+.led{width:100%;max-width:26px;aspect-ratio:1;border-radius:50%;background:#2b3646;border:2px solid #0d141e;margin:0 auto;position:relative}
+.led.on{background:#4dff95;box-shadow:0 0 12px #4dff95}
+.led.badon{background:#ff5d5d;box-shadow:0 0 12px #ff5d5d}
+.led-nums{display:grid;grid-template-columns:62px repeat(8,1fr);gap:6px;font-size:11px;text-align:center;color:#8fa0b8;margin-bottom:6px}
+.ref{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.ref{grid-template-columns:1fr}}
+.ref ol{margin:6px 0 0;padding-left:0;list-style:none;display:grid;gap:4px}
+.ref li{display:flex;align-items:center;gap:8px;font-size:13.5px}
+.ref li .sw{width:40px;height:12px;border-radius:6px;border:1px solid rgba(0,0,0,.2)}
+.ref li b{width:18px}
+
+/* ===== Topologi ===== */
+.mission-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.mission-tabs button{appearance:none;border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:10px;font-weight:700;cursor:pointer;display:flex;gap:6px;align-items:center;color:var(--muted)}
+.mission-tabs button.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.mission-tabs button .ck{color:var(--ok);font-weight:900}
+.mission-tabs button.active .ck{color:#7cf0c5}
+.topo-layout{display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start}
+@media(max-width:900px){.topo-layout{grid-template-columns:1fr}}
+.canvas-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.canvas-tools{display:flex;gap:6px;flex-wrap:wrap;padding:10px;border-bottom:1px solid var(--line);background:#fafcfe}
+.canvas-tools .btn{padding:7px 10px;font-size:13px}
+.canvas-tools .btn img{width:22px;height:22px;object-fit:contain}
+#topoSvg{display:block;width:100%;height:auto;touch-action:none;user-select:none;-webkit-user-select:none;background:
+  radial-gradient(circle,#d5dfeb 1px,transparent 1.4px) 0 0/22px 22px,#fbfcfe}
+.canvas-foot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:9px 12px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.node{cursor:grab}
+.node .ring{fill:#fff;stroke:#c9d5e4;stroke-width:2}
+.node.sel .ring{stroke:var(--primary);stroke-width:4;fill:var(--primary-soft)}
+.node-label{font-size:13px;font-weight:700;fill:var(--ink);text-anchor:middle;paint-order:stroke;stroke:#fff;stroke-width:4px}
+.edge{cursor:pointer}
+.edge-line{stroke:#2f6fe0;stroke-width:4;stroke-linecap:round}
+.edge-hit{stroke:transparent;stroke-width:20}
+.edge:hover .edge-line{stroke:var(--bad)}
+.side .card{margin-bottom:12px}
+.side h3{font-size:16px;margin-bottom:6px}
+.side ul{margin:6px 0 0;padding-left:18px;font-size:14px}
+
+/* ===== IP & Ping ===== */
+.ip-layout{display:grid;grid-template-columns:1.05fr 1fr;gap:16px;align-items:start}
+@media(max-width:900px){.ip-layout{grid-template-columns:1fr}}
+#ipSvg{width:100%;height:auto;display:block}
+.pcnode{cursor:pointer}
+.pcnode .ring{fill:#fff;stroke:#c9d5e4;stroke-width:2}
+.pcnode.sel .ring{stroke:var(--primary);stroke-width:4;fill:var(--primary-soft)}
+.ip-lbl{font-size:11px;text-anchor:middle;font-family:var(--mono);paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}
+.ip-name{font-size:13px;font-weight:800;text-anchor:middle;paint-order:stroke;stroke:#fff;stroke-width:5px;stroke-linejoin:round}
+.form{display:grid;gap:10px}
+.field label{display:block;font-size:13px;font-weight:700;margin-bottom:4px}
+.field input{width:100%;font:inherit;font-family:var(--mono);font-size:15px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
+.field input:focus{outline:2px solid var(--primary);border-color:var(--primary)}
+.field input:disabled{background:var(--surface-2);color:var(--muted)}
+.term{background:#0c1220;color:#d6e2f2;border-radius:12px;font-family:var(--mono);font-size:13px;overflow:hidden;border:1px solid #1f2a3d}
+.term-bar{display:flex;align-items:center;gap:6px;background:#1a2336;padding:7px 10px;font-size:12px;color:#9fb0c8}
+.term-bar i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.term-out{height:260px;overflow-y:auto;padding:10px 12px;white-space:pre-wrap;word-break:break-word}
+.term-out .ok{color:#6ff2a4}.term-out .bad{color:#ff8b8b}.term-out .info{color:#8fc1ff}.term-out .cmd{color:#fff}
+.term-in{display:flex;align-items:center;gap:6px;border-top:1px solid #1f2a3d;padding:8px 10px}
+.term-in span{color:#8fc1ff;white-space:nowrap}
+.term-in input{flex:1;min-width:0;background:transparent;border:0;color:#fff;font:inherit;outline:none}
+.qcmd{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.qcmd button{appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 10px;font-family:var(--mono);font-size:12.5px;cursor:pointer}
+.missions{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.missions li{display:flex;gap:10px;align-items:flex-start;font-size:14px;padding:9px 10px;border-radius:10px;background:var(--surface-2)}
+.missions li .k{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid #b5c2d3;display:grid;place-items:center;font-size:12px;color:#fff;margin-top:1px}
+.missions li.done{background:var(--ok-soft)}
+.missions li.done .k{background:var(--ok);border-color:var(--ok)}
+
+/* ===== Evaluasi ===== */
+.quiz{max-width:760px;margin:0 auto}
+.qprog{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin:8px 0 16px}
+.qprog i{display:block;height:100%;background:var(--primary);transition:width .3s}
+.qtext{font-size:18px;font-weight:700;margin-bottom:14px}
+.opts{display:grid;gap:8px}
+.opt{appearance:none;text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;cursor:pointer;font-size:15px;display:flex;gap:12px;align-items:flex-start}
+.opt:hover:not(:disabled){border-color:var(--primary)}
+.opt .l{flex:none;width:28px;height:28px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;font-weight:800}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.right .l{background:var(--ok);color:#fff}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt.wrong .l{background:var(--bad);color:#fff}
+.opt:disabled{cursor:default}
+.score{font-size:64px;font-weight:900;line-height:1;color:var(--primary)}
+.review{display:grid;gap:10px;margin-top:12px}
+.review .item{border-left:4px solid var(--bad);background:var(--surface-2);border-radius:8px;padding:10px 12px;font-size:14px}
+
+#toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);background:#13223a;color:#fff;padding:11px 16px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:200;max-width:calc(100% - 32px);text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast.ok{background:var(--ok)}#toast.bad{background:var(--bad)}
+.loading{display:grid;place-items:center;min-height:50vh;color:var(--muted)}
+@media(max-width:560px){
+  .prog .bar{width:70px}
+  .brand small{display:none}
+  main{padding:14px 12px 32px}
+  .card{padding:14px}
+  .hero{padding:24px 18px;min-height:240px}
+  .slot{height:96px}
+}
+@media print{.sticky,.no-print,#toast{display:none!important}body{background:#fff}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+
+<div class="sticky">
+  <header class="topbar">
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#1d5fd1"/><circle cx="17" cy="10" r="3.4" fill="#fff"/><circle cx="9" cy="24" r="3.4" fill="#fff"/><circle cx="25" cy="24" r="3.4" fill="#fff"/><path d="M17 10L9 24M17 10l8 14M9 24h16" stroke="#fff" stroke-width="2" fill="none"/></svg>
+      <div><b>Lab Maya Jaringan Dasar</b><small>Dasar-dasar TJKT • Fase E (Kelas X)</small></div>
+    </div>
+    <div class="prog" title="Progres belajar"><span id="progText">0%</span><div class="bar"><i id="progBar"></i></div></div>
+  </header>
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-page="home"><span class="n">⌂</span>Beranda</button>
+    <button class="tab" data-page="perangkat"><span class="n">1</span>Kenali Perangkat</button>
+    <button class="tab" data-page="crimping"><span class="n">2</span>Lab Crimping</button>
+    <button class="tab" data-page="topologi"><span class="n">3</span>Rakit Topologi</button>
+    <button class="tab" data-page="ip"><span class="n">4</span>IP &amp; Ping</button>
+    <button class="tab" data-page="evaluasi"><span class="n">5</span>Evaluasi</button>
+  </nav>
+</div>
+
+<main id="app">
+  <div class="loading" id="loading">Memuat aset…</div>
+
+  <!-- ================= BERANDA ================= -->
+  <section class="page" id="page-home">
+    <div class="hero" id="hero">
+      <span class="eyebrow">Media Pembelajaran Interaktif • Lab Maya</span>
+      <h1>Lab Maya Jaringan Dasar</h1>
+      <p>Belajar mengenal perangkat jaringan, membuat kabel UTP, merakit topologi, dan menguji koneksi dengan alamat IP — langsung praktik di layar, tanpa takut salah.</p>
+      <div class="row">
+        <button class="btn primary" data-go="perangkat">Mulai Belajar →</button>
+        <button class="btn ghost" id="toCP">Lihat CP &amp; ATP</button>
+      </div>
+    </div>
+
+    <h3 class="section-title">Aktivitas Praktik</h3>
+    <div class="mod-grid" id="modGrid"></div>
+
+    <h3 class="section-title" id="cpSection">Capaian &amp; Tujuan Pembelajaran</h3>
+    <div class="card">
+      <div class="tabs-inline" id="cpTabs">
+        <button class="active" data-t="cp">Capaian Pembelajaran</button>
+        <button data-t="atp">Alur Tujuan Pembelajaran</button>
+        <button data-t="petunjuk">Petunjuk</button>
+      </div>
+      <div id="cp-cp">
+        <p class="muted small" style="margin-bottom:10px">Mata pelajaran Dasar-dasar Teknik Jaringan Komputer dan Telekomunikasi (TJKT) • Fase E • Elemen yang dicakup media ini:</p>
+        <div class="cp-item"><b>Orientasi Dasar Teknik Jaringan Komputer dan Telekomunikasi</b>Pada akhir fase E, peserta didik mampu menggunakan peralatan/teknologi di bidang jaringan komputer dan telekomunikasi antara lain komputer, router, manageable switch, OTDR, firewall, server, dll.</div>
+        <div class="cp-item"><b>Media dan Jaringan Telekomunikasi</b>Pada akhir fase E, peserta didik mampu memahami prinsip dasar sistem IPV4/IPV6, TCP IP, Networking Service, sistem keamanan jaringan telekomunikasi, sistem seluler, sistem microwave, sistem VSAT IP, sistem Optik, dan sistem WLAN.</div>
+        <div class="cp-item"><b>Penggunaan Alat Ukur</b>Pada akhir fase E, peserta didik mampu menggunakan alat ukur, termasuk pemeliharaan alat ukur untuk seluruh jaringan komputer dan sistem telekomunikasi.</div>
+      </div>
+      <div id="cp-atp" hidden>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th style="width:56px">TP</th><th>Tujuan Pembelajaran</th><th style="width:190px">Elemen</th><th style="width:130px">Aktivitas</th></tr></thead>
+            <tbody>
+              <tr><td>10.1</td><td>Peserta didik mampu mengidentifikasi perangkat jaringan (PC, laptop, server, switch, router, access point, modem/ONT) beserta fungsinya.</td><td>Orientasi Dasar TJKT</td><td>Kenali Perangkat</td></tr>
+              <tr><td>10.2</td><td>Peserta didik mampu membuat kabel UTP straight-through dan crossover sesuai standar T568A/T568B dengan prosedur kerja yang benar.</td><td>Orientasi Dasar TJKT</td><td>Lab Crimping</td></tr>
+              <tr><td>10.3</td><td>Peserta didik mampu menggunakan LAN tester untuk menguji kabel UTP serta menafsirkan hasil pengujiannya.</td><td>Penggunaan Alat Ukur</td><td>Lab Crimping</td></tr>
+              <tr><td>10.4</td><td>Peserta didik mampu merancang topologi jaringan bus, star, ring, dan mesh serta membandingkan kelebihan dan kekurangannya.</td><td>Media dan Jaringan Telekomunikasi</td><td>Rakit Topologi</td></tr>
+              <tr><td>10.5</td><td>Peserta didik mampu mengonfigurasi alamat IPv4 dan subnet mask pada host serta menguji konektivitas menggunakan perintah ping.</td><td>Media dan Jaringan Telekomunikasi</td><td>IP &amp; Ping</td></tr>
+              <tr><td>10.6</td><td>Peserta didik mampu menganalisis masalah konektivitas sederhana (IP beda jaringan, konflik IP) dan menentukan perbaikannya.</td><td>Media dan Jaringan Telekomunikasi</td><td>IP &amp; Ping, Evaluasi</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div id="cp-petunjuk" hidden>
+        <ol class="steps-list">
+          <li>Kerjakan aktivitas secara berurutan: <b>Kenali Perangkat → Lab Crimping → Rakit Topologi → IP &amp; Ping → Evaluasi</b>.</li>
+          <li>Setiap aktivitas yang selesai tercatat pada bilah progres di kanan atas.</li>
+          <li>Progres tersimpan otomatis di browser perangkat ini, jadi kamu bisa melanjutkan di lain waktu.</li>
+          <li>Di Lab Crimping dan Rakit Topologi, kesalahan justru bagian dari belajar — baca umpan baliknya, lalu perbaiki.</li>
+          <li>Kerjakan Evaluasi setelah semua praktik selesai. Batas ketuntasan (KKTP): <b>75</b>.</li>
+        </ol>
+      </div>
+    </div>
+
+    <h3 class="section-title">Untuk Guru: Cek Aset Gambar</h3>
+    <div class="card">
+      <p class="small muted" style="margin-bottom:12px">Letakkan file PNG di folder <code>assets/</code> yang sejajar dengan <code>index.html</code>. Gambar yang belum ditemukan otomatis memakai gambar sementara.</p>
+      <div class="asset-grid" id="assetGrid"></div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn" id="resetAll">Reset seluruh progres</button>
+      </div>
+    </div>
+
+    <div class="credit">Disusun oleh <b>Mohammad Yusron Kholish, S.Kom</b> • SMKS PGRI SINGOSARI</div>
+  </section>
+
+  <!-- ================= KENALI PERANGKAT ================= -->
+  <section class="page" id="page-perangkat">
+    <div class="page-head">
+      <div>
+        <span class="chip blue">TP 10.1</span>
+        <h2 style="margin-top:6px">Kenali Perangkat Jaringan</h2>
+        <p>Ketuk setiap kartu untuk mempelajari fungsi, ciri, dan contoh penggunaannya. Aktivitas selesai jika semua kartu sudah dibuka.</p>
+      </div>
+      <span class="chip" id="devCount">0/11 dipelajari</span>
+    </div>
+    <div class="filter tabs-inline" id="devFilter">
+      <button class="active" data-f="all">Semua</button>
+      <button data-f="perangkat">Perangkat Jaringan</button>
+      <button data-f="media">Media &amp; Alat</button>
+    </div>
+    <div class="dev-grid" id="devGrid"></div>
+  </section>
+
+  <!-- ================= LAB CRIMPING ================= -->
+  <section class="page" id="page-crimping">
+    <div class="page-head">
+      <div>
+        <span class="chip blue">TP 10.2 &amp; 10.3</span>
+        <h2 style="margin-top:6px">Lab Crimping Kabel UTP</h2>
+        <p>Buat kabel straight-through dan crossover, lalu uji dengan LAN tester. Aktivitas selesai jika kedua jenis kabel lulus uji.</p>
+      </div>
+      <div class="row" id="crimpStatus"></div>
+    </div>
+    <div class="stepper" id="crimpStepper"></div>
+    <div class="card" id="crimpWork"></div>
+  </section>
+
+  <!-- ================= RAKIT TOPOLOGI ================= -->
+  <section class="page" id="page-topologi">
+    <div class="page-head">
+      <div>
+        <span class="chip blue">TP 10.4</span>
+        <h2 style="margin-top:6px">Rakit Topologi Jaringan</h2>
+        <p>Pilih misi, tambahkan perangkat ke kanvas, lalu pasang kabel. Tekan <b>Periksa</b> jika topologi sudah jadi.</p>
+      </div>
+    </div>
+    <div class="mission-tabs" id="topoTabs"></div>
+    <div class="topo-layout">
+      <div class="canvas-wrap">
+        <div class="canvas-tools" id="topoTools"></div>
+        <svg id="topoSvg" viewBox="0 0 800 460" aria-label="Kanvas topologi"></svg>
+        <div class="canvas-foot"><span>Ketuk perangkat lalu ketuk perangkat lain untuk memasang kabel • Ketuk kabel untuk menghapus • Seret untuk memindah</span><span id="topoStats"></span></div>
+      </div>
+      <div class="side">
+        <div class="card" id="topoMission"></div>
+        <div id="topoResult"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= IP & PING ================= -->
+  <section class="page" id="page-ip">
+    <div class="page-head">
+      <div>
+        <span class="chip blue">TP 10.5 &amp; 10.6</span>
+        <h2 style="margin-top:6px">Konfigurasi IP &amp; Uji Ping</h2>
+        <p>Empat PC terhubung ke satu switch (topologi star) tanpa router. Ketuk PC untuk mengatur alamat IP-nya, lalu uji koneksi lewat Command Prompt.</p>
+      </div>
+      <button class="btn" id="ipReset">Reset skenario</button>
+    </div>
+    <div class="ip-layout">
+      <div>
+        <div class="card" style="margin-bottom:14px"><svg id="ipSvg" viewBox="0 0 420 316" aria-label="Diagram jaringan"></svg></div>
+        <div class="card">
+          <h3 style="font-size:16px;margin-bottom:10px">Misi</h3>
+          <ul class="missions" id="ipMissions"></ul>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:14px">
+          <h3 style="font-size:16px;margin-bottom:10px" id="cfgTitle">Konfigurasi PC1</h3>
+          <div class="form">
+            <div class="field"><label for="cfgIp">IPv4 Address</label><input id="cfgIp" inputmode="decimal" autocomplete="off" placeholder="contoh: 192.168.10.3"></div>
+            <div class="field"><label for="cfgMask">Subnet Mask</label><input id="cfgMask" inputmode="decimal" autocomplete="off" placeholder="contoh: 255.255.255.0"></div>
+            <div class="field"><label>Default Gateway</label><input disabled value="— (tidak dipakai, belum ada router)"></div>
+            <div class="row"><button class="btn primary" id="cfgSave">Simpan Konfigurasi</button></div>
+            <div id="cfgMsg"></div>
+          </div>
+        </div>
+        <div class="term">
+          <div class="term-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span style="margin-left:6px" id="termTitle">Command Prompt — PC1</span></div>
+          <div class="term-out" id="termOut"></div>
+          <div class="term-in"><span id="termPrompt">C:\Users\PC1&gt;</span><input id="termIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ketik perintah, lalu Enter"></div>
+        </div>
+        <div class="qcmd" id="qcmd">
+          <button data-c="ipconfig">ipconfig</button><button data-c="ping ">ping …</button><button data-c="help">help</button><button data-c="cls">cls</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= EVALUASI ================= -->
+  <section class="page" id="page-evaluasi">
+    <div class="quiz" id="quiz"></div>
+  </section>
+</main>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+  <div class="modal-box"><button class="modal-close" id="modalClose" aria-label="Tutup">✕</button><div id="modalBody"></div></div>
+</div>
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* =========================================================
+   1. ASET GAMBAR
+   File asli dibaca dari folder assets/. Jika belum ada,
+   otomatis memakai gambar sementara (SVG) di bawah ini.
+   ========================================================= */
+const ASSET_DIR = 'assets/';
+const ASSETS = {
+  'pc':            { file:'pc.png',            label:'Komputer (PC)' },
+  'laptop':        { file:'laptop.png',        label:'Laptop' },
+  'server':        { file:'server.png',        label:'Server' },
+  'switch':        { file:'switch.png',        label:'Switch' },
+  'router':        { file:'router.png',        label:'Router' },
+  'access-point':  { file:'access-point.png',  label:'Access Point' },
+  'modem':         { file:'modem.png',         label:'Modem / ONT' },
+  'kabel-utp':     { file:'kabel-utp.png',     label:'Kabel UTP' },
+  'rj45':          { file:'rj45.png',          label:'Konektor RJ45' },
+  'tang-crimping': { file:'tang-crimping.png', label:'Tang Crimping' },
+  'lan-tester':    { file:'lan-tester.png',    label:'LAN Tester' },
+  'bg-lab':        { file:'bg-lab.png',        label:'Latar Lab Komputer' }
+};
+const GD = "<defs><linearGradient id='s' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#4d93ff'/><stop offset='1' stop-color='#1a4fb5'/></linearGradient><linearGradient id='t' x1='0' y1='0' x2='1' y2='0'><stop offset='0' stop-color='#f3f6fa'/><stop offset='1' stop-color='#c6cfdc'/></linearGradient></defs>";
+const SH = (cy,rx) => "<ellipse cx='100' cy='"+cy+"' rx='"+rx+"' ry='8' fill='#0b2447' opacity='.10'/>";
+const SVGW = b => "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'>"+GD+b+"</svg>";
+const FALLBACK = {
+  'pc': SVGW(SH(176,86)+"<rect x='14' y='36' width='118' height='84' rx='7' fill='#273140'/><rect x='21' y='43' width='104' height='68' rx='3' fill='url(#s)'/><path d='M21 43h58l-30 68H21z' fill='#fff' opacity='.09'/><rect x='64' y='120' width='18' height='18' fill='#7d8899'/><rect x='44' y='136' width='58' height='8' rx='4' fill='#5f6b7d'/><rect x='142' y='34' width='46' height='112' rx='7' fill='url(#t)' stroke='#9aa6b8' stroke-width='1.5'/><rect x='150' y='46' width='30' height='5' rx='2' fill='#9aa6b8'/><rect x='150' y='56' width='30' height='5' rx='2' fill='#9aa6b8'/><circle cx='165' cy='128' r='5' fill='#2f7bff'/><rect x='18' y='152' width='112' height='16' rx='4' fill='#dfe5ee' stroke='#9aa6b8' stroke-width='1.5'/><path d='M26 158h96M26 163h96' stroke='#b3bdcb' stroke-width='2' stroke-dasharray='5 3'/><rect x='140' y='152' width='16' height='22' rx='8' fill='#dfe5ee' stroke='#9aa6b8' stroke-width='1.5'/>"),
+  'laptop': SVGW(SH(172,88)+"<rect x='38' y='36' width='124' height='88' rx='7' fill='#273140'/><rect x='45' y='43' width='110' height='74' rx='3' fill='url(#s)'/><path d='M45 43h50l-28 74H45z' fill='#fff' opacity='.09'/><path d='M24 128h152l-10 30H34z' fill='#d3dae5' stroke='#9aa6b8' stroke-width='1.5'/><path d='M40 135h120M38 142h124M36 149h128' stroke='#aeb8c6' stroke-width='3' stroke-dasharray='7 3'/><path d='M14 158h172v4a7 7 0 0 1-7 7H21a7 7 0 0 1-7-7z' fill='#aab4c3'/>"),
+  'server': SVGW(SH(184,62)+"<rect x='54' y='14' width='92' height='166' rx='8' fill='url(#t)' stroke='#8d99ab' stroke-width='1.5'/><g><rect x='64' y='26' width='72' height='22' rx='3' fill='#2b3544'/><circle cx='74' cy='37' r='3' fill='#3ddc84'/><circle cx='84' cy='37' r='3' fill='#2f7bff'/><rect x='96' y='35' width='32' height='4' rx='2' fill='#56637a'/></g><g><rect x='64' y='54' width='72' height='22' rx='3' fill='#2b3544'/><circle cx='74' cy='65' r='3' fill='#3ddc84'/><circle cx='84' cy='65' r='3' fill='#2f7bff'/><rect x='96' y='63' width='32' height='4' rx='2' fill='#56637a'/></g><g><rect x='64' y='82' width='72' height='22' rx='3' fill='#2b3544'/><circle cx='74' cy='93' r='3' fill='#3ddc84'/><circle cx='84' cy='93' r='3' fill='#f5b301'/><rect x='96' y='91' width='32' height='4' rx='2' fill='#56637a'/></g><g><rect x='64' y='110' width='72' height='22' rx='3' fill='#2b3544'/><circle cx='74' cy='121' r='3' fill='#3ddc84'/><circle cx='84' cy='121' r='3' fill='#2f7bff'/><rect x='96' y='119' width='32' height='4' rx='2' fill='#56637a'/></g><path d='M66 146h68M66 154h68M66 162h68' stroke='#a3afc0' stroke-width='3'/>"),
+  'switch': SVGW(SH(140,92)+"<path d='M14 86l14-12h144l14 12z' fill='#e9eef5' stroke='#9aa6b8' stroke-width='1.5'/><rect x='14' y='86' width='172' height='46' rx='4' fill='url(#t)' stroke='#8d99ab' stroke-width='1.5'/><rect x='22' y='97' width='10' height='24' rx='2' fill='#2f7bff'/><g fill='#1f2732'><rect x='40' y='100' width='12' height='11' rx='1.5'/><rect x='56' y='100' width='12' height='11' rx='1.5'/><rect x='72' y='100' width='12' height='11' rx='1.5'/><rect x='88' y='100' width='12' height='11' rx='1.5'/><rect x='104' y='100' width='12' height='11' rx='1.5'/><rect x='120' y='100' width='12' height='11' rx='1.5'/><rect x='136' y='100' width='12' height='11' rx='1.5'/><rect x='152' y='100' width='12' height='11' rx='1.5'/></g><g fill='#3ddc84'><circle cx='46' cy='120' r='2.2'/><circle cx='62' cy='120' r='2.2'/><circle cx='78' cy='120' r='2.2'/><circle cx='94' cy='120' r='2.2'/><circle cx='110' cy='120' r='2.2'/><circle cx='126' cy='120' r='2.2'/><circle cx='142' cy='120' r='2.2'/><circle cx='158' cy='120' r='2.2'/></g>"),
+  'router': SVGW(SH(152,84)+"<rect x='46' y='26' width='7' height='72' rx='3.5' fill='#3a4554'/><rect x='147' y='26' width='7' height='72' rx='3.5' fill='#3a4554'/><path d='M22 104l12-16h132l12 16z' fill='#4a5668'/><rect x='22' y='104' width='156' height='40' rx='6' fill='#2b3544'/><circle cx='42' cy='124' r='3.2' fill='#3ddc84'/><circle cx='54' cy='124' r='3.2' fill='#3ddc84'/><circle cx='66' cy='124' r='3.2' fill='#2f7bff'/><circle cx='78' cy='124' r='3.2' fill='#3ddc84'/><rect x='108' y='121' width='56' height='5' rx='2.5' fill='#2f7bff'/>"),
+  'access-point': SVGW(SH(156,80)+"<ellipse cx='100' cy='124' rx='78' ry='28' fill='#bfc9d6'/><ellipse cx='100' cy='116' rx='78' ry='28' fill='url(#t)' stroke='#9aa6b8' stroke-width='1.5'/><ellipse cx='100' cy='116' rx='16' ry='5.5' fill='#2f7bff'/><g fill='none' stroke='#2f7bff' stroke-width='6' stroke-linecap='round'><path d='M84 62a24 24 0 0 1 32 0'/><path d='M72 48a42 42 0 0 1 56 0'/><path d='M60 34a60 60 0 0 1 80 0'/></g><circle cx='100' cy='76' r='6' fill='#2f7bff'/>"),
+  'modem': SVGW(SH(172,70)+"<path d='M70 60C70 30 124 40 124 10' stroke='#f2c230' stroke-width='5' fill='none' stroke-linecap='round'/><rect x='63' y='52' width='14' height='10' rx='2' fill='#2f7bff'/><rect x='40' y='60' width='120' height='106' rx='10' fill='url(#t)' stroke='#8d99ab' stroke-width='1.5'/><rect x='52' y='74' width='96' height='20' rx='4' fill='#e3e9f1'/><circle cx='62' cy='84' r='3.5' fill='#3ddc84'/><circle cx='78' cy='84' r='3.5' fill='#3ddc84'/><circle cx='94' cy='84' r='3.5' fill='#2f7bff'/><circle cx='110' cy='84' r='3.5' fill='#c3ccd8'/><circle cx='126' cy='84' r='3.5' fill='#3ddc84'/><rect x='52' y='108' width='96' height='4' rx='2' fill='#b3bdcb'/><rect x='52' y='118' width='60' height='4' rx='2' fill='#b3bdcb'/>"),
+  'kabel-utp': SVGW(SH(164,76)+"<g fill='none' stroke-width='10'><ellipse cx='96' cy='108' rx='66' ry='44' stroke='#2a64cc'/><ellipse cx='96' cy='108' rx='50' ry='32' stroke='#3d7cf0'/><ellipse cx='96' cy='108' rx='34' ry='21' stroke='#2a64cc'/></g><path d='M158 122c16 18 22 36 8 52' fill='none' stroke='#2f6fe0' stroke-width='10' stroke-linecap='round'/><g stroke-width='3' stroke-linecap='round'><path d='M166 174l-6 12' stroke='#f07c1b'/><path d='M168 175l-2 13' stroke='#2fa84f'/><path d='M170 175l3 12' stroke='#2a6fdb'/><path d='M172 174l7 11' stroke='#8b5a2b'/></g>"),
+  'rj45': SVGW(SH(162,60)+"<path d='M80 140h40v18a4 4 0 0 1-4 4H84a4 4 0 0 1-4-4z' fill='#cfdbea' stroke='#8fa3bd' stroke-width='2'/><path d='M56 66h88v66a8 8 0 0 1-8 8H64a8 8 0 0 1-8-8z' fill='#dfe9f5' fill-opacity='.9' stroke='#8fa3bd' stroke-width='2'/><g fill='#d4a514'><rect x='63' y='70' width='6' height='24' rx='1'/><rect x='72' y='70' width='6' height='24' rx='1'/><rect x='81' y='70' width='6' height='24' rx='1'/><rect x='90' y='70' width='6' height='24' rx='1'/><rect x='99' y='70' width='6' height='24' rx='1'/><rect x='108' y='70' width='6' height='24' rx='1'/><rect x='117' y='70' width='6' height='24' rx='1'/><rect x='126' y='70' width='6' height='24' rx='1'/></g><path d='M76 104h48l-6 26H82z' fill='#c4d3e6' stroke='#8fa3bd' stroke-width='1.5'/>"),
+  'tang-crimping': SVGW(SH(184,70)+"<path d='M94 98L44 176' stroke='#d23c3c' stroke-width='18' stroke-linecap='round'/><path d='M106 98l50 78' stroke='#2b3544' stroke-width='18' stroke-linecap='round'/><path d='M58 26h84l8 42-50 40-50-40z' fill='#8a95a6' stroke='#566273' stroke-width='2.5' stroke-linejoin='round'/><rect x='80' y='40' width='40' height='18' rx='3' fill='#2b3544'/><g fill='#d4a514'><rect x='86' y='44' width='3' height='10'/><rect x='92' y='44' width='3' height='10'/><rect x='98' y='44' width='3' height='10'/><rect x='104' y='44' width='3' height='10'/><rect x='110' y='44' width='3' height='10'/></g><circle cx='100' cy='88' r='8' fill='#c4ccd8' stroke='#566273' stroke-width='2.5'/>"),
+  'lan-tester': SVGW(SH(176,86)+"<rect x='18' y='42' width='96' height='126' rx='12' fill='#2f7bff'/><rect x='28' y='54' width='76' height='44' rx='5' fill='#0f2f66'/><g fill='#4dff95'><circle cx='37' cy='70' r='3.4'/><circle cx='46' cy='70' r='3.4'/><circle cx='55' cy='70' r='3.4'/><circle cx='64' cy='70' r='3.4'/><circle cx='73' cy='70' r='3.4'/><circle cx='82' cy='70' r='3.4'/><circle cx='91' cy='70' r='3.4'/><circle cx='100' cy='70' r='3.4' opacity='.35'/></g><rect x='36' y='82' width='60' height='4' rx='2' fill='#2f5fa8'/><rect x='50' y='116' width='32' height='20' rx='2' fill='#1f2732'/><rect x='40' y='146' width='16' height='10' rx='5' fill='#ffcf33'/><rect x='126' y='66' width='58' height='102' rx='10' fill='#1d4fb0'/><g fill='#4dff95'><circle cx='155' cy='80' r='3'/><circle cx='155' cy='89' r='3'/><circle cx='155' cy='98' r='3'/><circle cx='155' cy='107' r='3'/></g><rect x='140' y='130' width='30' height='20' rx='2' fill='#1f2732'/>"),
+  'bg-lab': "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 900'><defs><linearGradient id='w' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#1d3f74'/><stop offset='1' stop-color='#0e2449'/></linearGradient><g id='m'><rect width='150' height='96' rx='8' fill='#0a1730'/><rect x='8' y='8' width='134' height='74' rx='4' fill='#2f7bff' opacity='.55'/><rect x='64' y='96' width='22' height='24' fill='#0a1730'/><rect x='40' y='118' width='70' height='8' rx='4' fill='#0a1730'/></g></defs><rect width='1600' height='900' fill='url(#w)'/><g fill='#fff' opacity='.05'><rect x='80' y='60' width='300' height='220' rx='10'/><rect x='430' y='60' width='300' height='220' rx='10'/><rect x='780' y='60' width='300' height='220' rx='10'/><rect x='1130' y='60' width='300' height='220' rx='10'/></g><g opacity='.75'><use href='#m' x='120' y='380'/><use href='#m' x='420' y='380'/><use href='#m' x='720' y='380'/><use href='#m' x='1020' y='380'/><use href='#m' x='1320' y='380'/></g><rect y='505' width='1600' height='26' fill='#0a1a36'/><g opacity='.9'><use href='#m' x='40' y='600'/><use href='#m' x='360' y='600'/><use href='#m' x='680' y='600'/><use href='#m' x='1000' y='600'/><use href='#m' x='1320' y='600'/></g><rect y='726' width='1600' height='174' fill='#081530'/></svg>"
+};
+const svgURI = s => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
+const assetSrc = {};
+function A(k){ return assetSrc[k] || svgURI(FALLBACK[k] || FALLBACK['pc']); }
+function loadAssets(){
+  return Promise.all(Object.keys(ASSETS).map(k => new Promise(res => {
+    let done = false;
+    const finish = ok => { if(done) return; done = true; ASSETS[k].found = ok; assetSrc[k] = ok ? ASSET_DIR + ASSETS[k].file : svgURI(FALLBACK[k]); res(); };
+    const img = new Image();
+    img.onload = () => finish(true);
+    img.onerror = () => finish(false);
+    setTimeout(() => finish(false), 5000);
+    img.src = ASSET_DIR + ASSETS[k].file;
+  })));
+}
+
+/* =========================================================
+   2. UTILITAS & PENYIMPANAN PROGRES
+   ========================================================= */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function toast(msg, type){ const t=$('#toast'); t.textContent=msg; t.className='show '+(type||''); clearTimeout(toast._t); toast._t=setTimeout(()=>{ t.className=''; }, 2800); }
+
+const STORE_KEY = 'labmaya-jaringan-dasar-v1';
+function defaultState(){ return { viewed:[], crimp:{straight:false,cross:false}, topo:{bus:false,star:false,ring:false,mesh:false}, ip:{m1:false,m2:false,m3:false,m4:false}, evalBest:null, evalName:'' }; }
+function loadState(){
+  try{ const s = JSON.parse(localStorage.getItem(STORE_KEY)); if(s && typeof s==='object'){ const d=defaultState(); return { ...d, ...s, crimp:{...d.crimp,...(s.crimp||{})}, topo:{...d.topo,...(s.topo||{})}, ip:{...d.ip,...(s.ip||{})} }; } }catch(e){}
+  return defaultState();
+}
+let state = loadState();
+function saveState(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} updateProgress(); }
+
+const MODULES = [
+  { id:'perangkat', no:1, nama:'Kenali Perangkat', icon:'router',        desc:'Kenali 11 perangkat, media, dan alat jaringan beserta fungsinya.', total:()=>DEVICES.length, done:()=>state.viewed.length },
+  { id:'crimping',  no:2, nama:'Lab Crimping',     icon:'tang-crimping', desc:'Susun warna kabel, crimping RJ45, lalu uji dengan LAN tester.',     total:()=>2, done:()=>(state.crimp.straight?1:0)+(state.crimp.cross?1:0) },
+  { id:'topologi',  no:3, nama:'Rakit Topologi',   icon:'switch',        desc:'Bangun topologi bus, star, ring, dan mesh di kanvas.',               total:()=>4, done:()=>Object.values(state.topo).filter(Boolean).length },
+  { id:'ip',        no:4, nama:'IP & Ping',        icon:'pc',            desc:'Atur alamat IP dan uji koneksi antar-PC dengan ping.',               total:()=>4, done:()=>Object.values(state.ip).filter(Boolean).length },
+  { id:'evaluasi',  no:5, nama:'Evaluasi',         icon:'laptop',        desc:'15 soal acak lengkap dengan pembahasan. KKTP 75.',                   total:()=>1, done:()=>(state.evalBest!==null && state.evalBest>=75)?1:0 }
+];
+function updateProgress(){
+  let sum = 0;
+  MODULES.forEach(m => {
+    const r = Math.min(1, m.done()/m.total()); sum += r;
+    const tab = $('.tab[data-page="'+m.id+'"]'); if(tab){ tab.classList.toggle('done', r>=1); $('.n',tab).textContent = r>=1 ? '✓' : m.no; }
+    const card = $('.mod[data-go="'+m.id+'"]');
+    if(card){ $('.bar i',card).style.width=(r*100)+'%'; const ch=$('.chip',card); ch.textContent = r>=1?'✓ Selesai':(r>0?'Sedang dikerjakan':'Belum dimulai'); ch.className='chip '+(r>=1?'ok':(r>0?'warn':'')); }
+  });
+  const pct = Math.round(sum/MODULES.length*100);
+  $('#progText').textContent = pct+'%'; $('#progBar').style.width = pct+'%';
+}
+
+/* =========================================================
+   3. NAVIGASI & BERANDA
+   ========================================================= */
+const PAGES = ['home','perangkat','crimping','topologi','ip','evaluasi'];
+function go(page){
+  if(!PAGES.includes(page)) page='home';
+  $$('.page').forEach(p => p.classList.toggle('active', p.id==='page-'+page));
+  $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.page===page));
+  const tab = $('.tab[data-page="'+page+'"]'); if(tab && tab.scrollIntoView) tab.scrollIntoView({block:'nearest',inline:'center'});
+  window.scrollTo(0,0);
+  if(page==='topologi') topoRender();
+  try{ history.replaceState(null,'','#'+page); }catch(e){}
+}
+function initHome(){
+  $('#hero').style.backgroundImage = 'url("'+A('bg-lab')+'")';
+  $('#modGrid').innerHTML = MODULES.map(m => `
+    <button class="card mod" data-go="${m.id}">
+      <div class="thumb"><img src="${A(m.icon)}" alt=""></div>
+      <span class="chip">Belum dimulai</span>
+      <h3>${m.no}. ${esc(m.nama)}</h3>
+      <p class="muted small">${esc(m.desc)}</p>
+      <div class="bar"><i></i></div>
+    </button>`).join('');
+  $('#assetGrid').innerHTML = Object.keys(ASSETS).map(k => `
+    <div class="asset">
+      <div class="im"><img src="${A(k)}" alt="${esc(ASSETS[k].label)}"></div>
+      <code>${ASSETS[k].file}</code>
+      <span class="chip ${ASSETS[k].found?'ok':'warn'}">${ASSETS[k].found?'✓ Ditemukan':'Gambar sementara'}</span>
+    </div>`).join('');
+  $('#cpTabs').addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    $$('#cpTabs button').forEach(x => x.classList.toggle('active', x===b));
+    ['cp','atp','petunjuk'].forEach(t => { $('#cp-'+t).hidden = (t!==b.dataset.t); });
+  });
+  $('#toCP').addEventListener('click', () => $('#cpSection').scrollIntoView({behavior:'smooth'}));
+  $('#resetAll').addEventListener('click', () => {
+    if(!confirm('Hapus seluruh progres belajar di perangkat ini?')) return;
+    state = defaultState(); saveState(); renderDevices(); crimpReset(); topo.data={}; topoRender(); ipResetScenario(); quizStart(true);
+    toast('Progres berhasil direset');
+  });
+}
+
+/* =========================================================
+   4. KENALI PERANGKAT
+   ========================================================= */
+const DEVICES = [
+  { id:'pc', grup:'perangkat', nama:'Komputer (PC)', kategori:'Perangkat akhir (end device)',
+    fungsi:'Tempat pengguna bekerja: mengirim, menerima, dan mengolah data di jaringan.',
+    ciri:['Terhubung ke jaringan melalui NIC (kartu jaringan) dengan port RJ45','Memiliki alamat IP dan MAC address sendiri','Dapat berperan sebagai client maupun server sederhana'],
+    contoh:'Komputer siswa di lab yang mengakses e-learning sekolah.' },
+  { id:'laptop', grup:'perangkat', nama:'Laptop', kategori:'Perangkat akhir (end device)',
+    fungsi:'Perangkat akhir yang mudah dibawa; dapat terhubung ke jaringan memakai kabel LAN atau Wi-Fi.',
+    ciri:['Memiliki kartu Wi-Fi, sebagian juga port LAN','Cocok untuk jaringan nirkabel karena mudah dipindah'],
+    contoh:'Laptop guru yang tersambung ke Wi-Fi ruang guru untuk mengisi nilai.' },
+  { id:'server', grup:'perangkat', nama:'Server', kategori:'Penyedia layanan',
+    fungsi:'Komputer khusus yang menyediakan layanan bagi banyak client, misalnya web, file, DHCP, atau database.',
+    ciri:['Spesifikasi tinggi dan menyala 24 jam','Umumnya memakai IP statis agar mudah ditemukan client','Ditempatkan di ruang server atau rak'],
+    contoh:'Server ujian (CBT) yang diakses semua komputer lab saat asesmen.' },
+  { id:'switch', grup:'perangkat', nama:'Switch', kategori:'Penghubung dalam LAN (Layer 2 – Data Link)',
+    fungsi:'Menghubungkan banyak perangkat dalam satu LAN dan meneruskan data hanya ke port tujuan berdasarkan MAC address.',
+    ciri:['Memiliki banyak port RJ45 (8, 16, 24, atau 48 port)','Lebih efisien daripada hub karena tidak menyebarkan data ke semua port','Managed switch dapat dikonfigurasi, misalnya untuk VLAN'],
+    contoh:'Pusat sambungan semua komputer di lab TKJ (topologi star).' },
+  { id:'router', grup:'perangkat', nama:'Router', kategori:'Penghubung antarjaringan (Layer 3 – Network)',
+    fungsi:'Menghubungkan dua jaringan atau lebih yang berbeda dan menentukan jalur (routing) paket berdasarkan alamat IP.',
+    ciri:['Memiliki port WAN (ke ISP/internet) dan port LAN','Sering dilengkapi DHCP server, NAT, dan firewall','Menjadi default gateway bagi perangkat di LAN'],
+    contoh:'Menghubungkan LAN sekolah ke internet, misalnya memakai router MikroTik.' },
+  { id:'access-point', grup:'perangkat', nama:'Access Point', kategori:'Perangkat jaringan nirkabel (WLAN)',
+    fungsi:'Memancarkan sinyal Wi-Fi sehingga perangkat tanpa kabel dapat bergabung ke jaringan kabel (LAN).',
+    ciri:['Memiliki nama jaringan (SSID) dan kata sandi','Disambungkan ke switch atau router dengan kabel UTP','Jangkauan dipengaruhi jarak dan penghalang seperti dinding'],
+    contoh:'Access point di perpustakaan agar siswa dapat terhubung dengan HP atau laptop.' },
+  { id:'modem', grup:'perangkat', nama:'Modem / ONT', kategori:'Perangkat akses ke ISP',
+    fungsi:'Mengubah sinyal dari penyedia internet (cahaya pada fiber optik atau sinyal listrik) menjadi data digital untuk jaringan lokal, dan sebaliknya.',
+    ciri:['ONT (Optical Network Terminal) dipakai pada layanan internet fiber optik','Memiliki port PON untuk kabel fiber dan port LAN','Lampu indikator PON/LOS menunjukkan status sambungan fiber'],
+    contoh:'Perangkat pertama di rumah atau sekolah yang tersambung ke kabel fiber dari ISP.' },
+  { id:'kabel-utp', grup:'media', nama:'Kabel UTP', kategori:'Media transmisi (kabel tembaga)',
+    fungsi:'Menyalurkan sinyal data antarperangkat di jaringan kabel (LAN).',
+    ciri:['Berisi 8 kabel tembaga yang dipilin berpasangan (4 pasang)','Unshielded: tanpa pelindung logam sehingga harganya terjangkau','Kategori yang umum dipakai: Cat5e dan Cat6','Panjang maksimal 100 meter per segmen'],
+    contoh:'Menghubungkan PC ke switch di lab komputer.' },
+  { id:'rj45', grup:'media', nama:'Konektor RJ45', kategori:'Media transmisi (konektor)',
+    fungsi:'Ujung kabel UTP yang dicolokkan ke port jaringan pada PC, switch, atau router.',
+    ciri:['Memiliki 8 pin logam (pin 1–8)','Dipasang menggunakan tang crimping','Urutan kabel mengikuti standar T568A atau T568B'],
+    contoh:'Dipasang di kedua ujung kabel UTP saat membuat kabel straight atau cross.' },
+  { id:'tang-crimping', grup:'media', nama:'Tang Crimping', kategori:'Alat kerja',
+    fungsi:'Memotong dan mengupas kabel UTP, lalu menjepit (crimp) konektor RJ45 agar pin menembus dan mengunci kabel.',
+    ciri:['Memiliki bagian pemotong, pengupas, dan lubang crimp untuk konektor 8P (RJ45)','Ditekan kuat hingga terdengar bunyi "klik"'],
+    contoh:'Membuat kabel jaringan sendiri sesuai panjang yang dibutuhkan.',
+    k3:'Gunakan dengan hati-hati dan jauhkan jari dari bilah pemotong.' },
+  { id:'lan-tester', grup:'media', nama:'LAN Tester', kategori:'Alat ukur jaringan',
+    fungsi:'Menguji kabel UTP yang sudah terpasang konektor: memastikan setiap pin tersambung dan urutannya benar.',
+    ciri:['Terdiri dari unit master (pengirim) dan remote (penerima)','Lampu 1–8 menyala berurutan sesuai sambungan pin','Straight: 1-1, 2-2, … 8-8. Cross: 1-3, 2-6, 3-1, 6-2, lainnya sama'],
+    contoh:'Mengecek kabel buatan siswa sebelum dipasang ke switch.',
+    k3:'Pemeliharaan: matikan setelah dipakai, simpan di tempat kering, dan lepas baterai jika lama tidak digunakan.' }
+];
+let devFilter = 'all';
+function renderDevices(){
+  const list = DEVICES.filter(d => devFilter==='all' || d.grup===devFilter);
+  $('#devGrid').innerHTML = list.map(d => `
+    <button class="card dev ${state.viewed.includes(d.id)?'viewed':''}" data-dev="${d.id}">
+      <span class="seen">✓</span>
+      <div class="im"><img src="${A(d.id)}" alt="${esc(d.nama)}"></div>
+      <b>${esc(d.nama)}</b>
+      <span class="muted small">${esc(d.kategori)}</span>
+    </button>`).join('');
+  $('#devCount').textContent = state.viewed.length+'/'+DEVICES.length+' dipelajari';
+  $('#devCount').className = 'chip '+(state.viewed.length>=DEVICES.length?'ok':'');
+}
+function openDevice(id){
+  const d = DEVICES.find(x => x.id===id); if(!d) return;
+  $('#modalBody').innerHTML = `
+    <div class="detail">
+      <div class="im"><img src="${A(d.id)}" alt="${esc(d.nama)}"></div>
+      <div>
+        <span class="chip blue">${esc(d.kategori)}</span>
+        <h3>${esc(d.nama)}</h3>
+        <div class="lbl">Fungsi</div><p>${esc(d.fungsi)}</p>
+        <div class="lbl">Ciri-ciri</div><ul>${d.ciri.map(c=>'<li>'+esc(c)+'</li>').join('')}</ul>
+        <div class="lbl">Contoh penggunaan</div><p>${esc(d.contoh)}</p>
+        ${d.k3?`<div class="alert warn" style="margin-top:12px"><b>K3 &amp; pemeliharaan:</b> ${esc(d.k3)}</div>`:''}
+      </div>
+    </div>`;
+  openModal();
+  if(!state.viewed.includes(id)){
+    state.viewed.push(id); saveState(); renderDevices();
+    if(state.viewed.length===DEVICES.length) setTimeout(()=>toast('Hebat! Semua perangkat sudah dipelajari 🎉','ok'), 400);
+  }
+}
+function openModal(){ $('#modal').classList.add('open'); }
+function closeModal(){ $('#modal').classList.remove('open'); }
+
+/* =========================================================
+   5. LAB CRIMPING
+   ========================================================= */
+const WIRES = {
+  wo:{nama:'Putih-Oranye', c:'#f07c1b', s:true},  o:{nama:'Oranye', c:'#f07c1b'},
+  wg:{nama:'Putih-Hijau',  c:'#2fa84f', s:true},  g:{nama:'Hijau',  c:'#2fa84f'},
+  wb:{nama:'Putih-Biru',   c:'#2a6fdb', s:true},  b:{nama:'Biru',   c:'#2a6fdb'},
+  wbr:{nama:'Putih-Coklat',c:'#8b5a2b', s:true},  br:{nama:'Coklat',c:'#8b5a2b'}
+};
+const T568B = ['wo','o','wg','b','wb','g','wbr','br'];
+const T568A = ['wg','g','wo','b','wb','o','wbr','br'];
+const CROSS_MAP = [2,5,0,3,4,1,6,7];   // pin master (indeks) → pin remote (indeks)
+const STRAIGHT_MAP = [0,1,2,3,4,5,6,7];
+const PROSEDUR = [
+  'Kupas jaket (kulit luar) kabel UTP sepanjang ±2 cm dengan pengupas pada tang crimping.',
+  'Urai dan luruskan 8 kabel, lalu susun warnanya sesuai standar.',
+  'Ratakan ujung kabel dengan memotongnya hingga tersisa ±1,5 cm.',
+  'Masukkan kabel ke konektor RJ45 (klip menghadap ke bawah) sampai ujungnya menyentuh dinding depan konektor.',
+  'Masukkan konektor ke lubang crimp, lalu tekan tang dengan kuat hingga berbunyi "klik".'
+];
+const wireBg = k => WIRES[k].s ? `repeating-linear-gradient(135deg,#fafafa 0 6px,${WIRES[k].c} 6px 10px)` : WIRES[k].c;
+let crimp;
+function crimpReset(){ crimp = { mode:null, step:1, A:Array(8).fill(null), B:Array(8).fill(null), procOrder:[], procDone:0, crimped:false, result:null }; renderCrimp(); }
+const stdOf = (mode,end) => (mode==='cross' && end==='B') ? T568A : T568B;
+const stdName = (mode,end) => (mode==='cross' && end==='B') ? 'T568A' : 'T568B';
+function renderCrimp(){
+  const labels = ['Jenis Kabel','Ujung A','Ujung B','Crimping','Uji LAN Tester'];
+  $('#crimpStepper').innerHTML = labels.map((l,i) => `<div class="st ${crimp.step===i+1?'active':(crimp.step>i+1?'done':'')}"><span class="c">${crimp.step>i+1?'✓':i+1}</span>${l}</div>`).join('');
+  $('#crimpStatus').innerHTML = `<span class="chip ${state.crimp.straight?'ok':''}">${state.crimp.straight?'✓':'○'} Straight</span><span class="chip ${state.crimp.cross?'ok':''}">${state.crimp.cross?'✓':'○'} Crossover</span>`;
+  const w = $('#crimpWork');
+  if(crimp.step===1){
+    w.innerHTML = `
+      <h3 style="font-size:18px;margin-bottom:4px">Pilih jenis kabel yang akan dibuat</h3>
+      <p class="muted small" style="margin-bottom:14px">Perhatikan perangkat yang akan dihubungkan dan standar warna di kedua ujungnya.</p>
+      <div class="choice-grid">
+        <button class="card choice" data-mode="straight">
+          <div class="pair"><img src="${A('pc')}" alt=""><span class="ln"></span><img src="${A('switch')}" alt=""></div>
+          <div class="row" style="justify-content:space-between"><h3>Straight-Through</h3>${state.crimp.straight?'<span class="chip ok">✓ Lulus</span>':''}</div>
+          <p class="small muted">Menghubungkan perangkat <b>berbeda jenis</b>, misalnya PC ↔ switch.</p>
+          <p class="small"><b>Ujung A:</b> T568B &nbsp;•&nbsp; <b>Ujung B:</b> T568B</p>
+        </button>
+        <button class="card choice" data-mode="cross">
+          <div class="pair"><img src="${A('pc')}" alt=""><span class="ln" style="background:#f07c1b"></span><img src="${A('pc')}" alt=""></div>
+          <div class="row" style="justify-content:space-between"><h3>Crossover</h3>${state.crimp.cross?'<span class="chip ok">✓ Lulus</span>':''}</div>
+          <p class="small muted">Menghubungkan perangkat <b>sejenis</b>, misalnya PC ↔ PC.</p>
+          <p class="small"><b>Ujung A:</b> T568B &nbsp;•&nbsp; <b>Ujung B:</b> T568A</p>
+        </button>
+      </div>
+      <div class="alert info" style="margin-top:14px">Info: switch dan kartu jaringan modern umumnya mendukung <b>Auto-MDIX</b> sehingga bisa menyesuaikan jenis kabel, tetapi teknisi tetap wajib memahami kedua standar ini.</div>`;
+    return;
+  }
+  if(crimp.step===2 || crimp.step===3){
+    const end = crimp.step===2 ? 'A' : 'B';
+    const arr = crimp[end];
+    const used = arr.filter(Boolean);
+    const pool = Object.keys(WIRES).filter(k => !used.includes(k));
+    const full = used.length===8;
+    w.innerHTML = `
+      <div class="row" style="justify-content:space-between;margin-bottom:6px">
+        <h3 style="font-size:18px">Susun Ujung ${end} — standar <span style="color:var(--primary)">${stdName(crimp.mode,end)}</span></h3>
+        <span class="chip blue">${crimp.mode==='straight'?'Kabel Straight':'Kabel Crossover'}</span>
+      </div>
+      <p class="muted small">Ketuk kabel di bawah untuk memasukkannya ke pin kosong berikutnya. Ketuk pin yang sudah terisi untuk melepasnya. Posisi konektor: klip menghadap ke bawah, pin 1 di kiri.</p>
+      <div class="conn">
+        <div class="conn-pins">${'<span></span>'.repeat(8)}</div>
+        <div class="conn-slots">${arr.map((k,i)=> k
+          ? `<button class="slot filled" data-slot="${i}" style="background:${wireBg(k)}" title="${WIRES[k].nama}"><span class="nm">${WIRES[k].nama}</span><span class="no">${i+1}</span></button>`
+          : `<button class="slot" data-slot="${i}"><span class="no">${i+1}</span></button>`).join('')}</div>
+      </div>
+      <div class="conn-cap">Nomor pin RJ45</div>
+      <h4 style="margin-top:14px;font-size:14px">Kabel yang tersedia (${pool.length})</h4>
+      <div class="palette">${pool.length? shuffleOnce(end,pool).map(k=>`<button class="wire" data-wire="${k}"><span class="sw" style="background:${wireBg(k)}"></span>${WIRES[k].nama}</button>`).join('') : '<p class="muted small">Semua kabel sudah tersusun.</p>'}</div>
+      <div class="row" style="margin-top:16px;justify-content:space-between">
+        <div class="row"><button class="btn" data-act="back">← Kembali</button><button class="btn" data-act="ref">Lihat Standar Warna</button><button class="btn" data-act="clear">Kosongkan</button></div>
+        <button class="btn primary" data-act="next" ${full?'':'disabled'}>${end==='A'?'Lanjut ke Ujung B →':'Lanjut ke Crimping →'}</button>
+      </div>`;
+    return;
+  }
+  if(crimp.step===4){
+    if(!crimp.procOrder.length) crimp.procOrder = shuffle(PROSEDUR.map((_,i)=>i));
+    const doneAll = crimp.procDone===PROSEDUR.length;
+    w.innerHTML = `
+      <h3 style="font-size:18px;margin-bottom:4px">Prosedur Crimping</h3>
+      <p class="muted small" style="margin-bottom:12px">Ketuk langkah-langkah berikut <b>sesuai urutan kerja yang benar</b>. Langkah yang benar akan diberi nomor.</p>
+      <div class="tools-row"><img src="${A('kabel-utp')}" alt="Kabel UTP"><img src="${A('rj45')}" alt="RJ45"><img id="tangImg" src="${A('tang-crimping')}" alt="Tang crimping"></div>
+      <div class="proc" id="procList">${crimp.procOrder.map(i => {
+        const doneIdx = i < crimp.procDone;
+        return `<button class="${doneIdx?'done':''}" data-proc="${i}"><span class="k">${doneIdx? (i+1) : '•'}</span><span>${esc(PROSEDUR[i])}</span></button>`; }).join('')}</div>
+      ${doneAll?`<div class="alert ok" style="margin-top:12px">Prosedur benar! Konektor sudah terjepit di kedua ujung. Saatnya menguji kabel.</div>`:''}
+      <div class="row" style="margin-top:16px;justify-content:space-between">
+        <button class="btn" data-act="back">← Kembali</button>
+        <button class="btn primary" data-act="next" ${doneAll?'':'disabled'}>Uji dengan LAN Tester →</button>
+      </div>`;
+    return;
+  }
+  if(crimp.step===5){
+    w.innerHTML = `
+      <h3 style="font-size:18px;margin-bottom:4px">Uji Kabel dengan LAN Tester</h3>
+      <p class="muted small" style="margin-bottom:12px">Colokkan ujung A ke unit <b>master</b> dan ujung B ke unit <b>remote</b>, lalu nyalakan tester. Amati pasangan lampu yang menyala.</p>
+      <div class="tester">
+        <img src="${A('lan-tester')}" alt="LAN tester">
+        <div class="led-panel">
+          <div class="led-nums"><span></span>${[1,2,3,4,5,6,7,8].map(n=>'<span>'+n+'</span>').join('')}</div>
+          <div class="led-row"><span class="lb">MASTER</span>${[0,1,2,3,4,5,6,7].map(i=>`<span class="led" id="lm${i}"></span>`).join('')}</div>
+          <div class="led-row"><span class="lb">REMOTE</span>${[0,1,2,3,4,5,6,7].map(i=>`<span class="led" id="lr${i}"></span>`).join('')}</div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:14px"><button class="btn primary" data-act="test" id="btnTest">▶ Nyalakan Tester</button><span class="muted small" id="testInfo"></span></div>
+      <div id="testResult" style="margin-top:14px"></div>`;
+    if(crimp.result) showTestResult();
+  }
+}
+const _poolOrder = {};
+function shuffleOnce(end, pool){
+  if(!_poolOrder[end]) _poolOrder[end] = shuffle(Object.keys(WIRES));
+  return _poolOrder[end].filter(k => pool.includes(k));
+}
+function showRef(){
+  const col = (name,arr) => `<div><b>${name}</b><ol>${arr.map((k,i)=>`<li><b>${i+1}</b><span class="sw" style="background:${wireBg(k)}"></span>${WIRES[k].nama}</li>`).join('')}</ol></div>`;
+  $('#modalBody').innerHTML = `<h3 style="font-size:20px;margin-bottom:6px">Standar Urutan Warna Kabel UTP</h3>
+    <p class="muted small" style="margin-bottom:12px">Coba ingat-ingat sebelum melihat, ya! Perbedaan T568A dan T568B hanya pada pasangan oranye dan hijau yang bertukar tempat.</p>
+    <div class="ref">${col('T568B',T568B)}${col('T568A',T568A)}</div>
+    <div class="alert info" style="margin-top:14px"><b>Straight:</b> kedua ujung sama (B–B). <b>Crossover:</b> ujung berbeda (B–A).</div>`;
+  openModal();
+}
+function crimpClick(e){
+  const mode = e.target.closest('[data-mode]');
+  if(mode){ crimp.mode = mode.dataset.mode; crimp.step=2; crimp.A=Array(8).fill(null); crimp.B=Array(8).fill(null); crimp.procOrder=[]; crimp.procDone=0; crimp.result=null; delete _poolOrder.A; delete _poolOrder.B; renderCrimp(); return; }
+  const end = crimp.step===2 ? 'A' : (crimp.step===3 ? 'B' : null);
+  const wire = e.target.closest('[data-wire]');
+  if(wire && end){ const i = crimp[end].indexOf(null); if(i>-1){ crimp[end][i]=wire.dataset.wire; renderCrimp(); } return; }
+  const slot = e.target.closest('[data-slot]');
+  if(slot && end){ const i=+slot.dataset.slot; if(crimp[end][i]){ crimp[end][i]=null; renderCrimp(); } return; }
+  const proc = e.target.closest('[data-proc]');
+  if(proc){
+    const i = +proc.dataset.proc;
+    if(i < crimp.procDone) return;
+    if(i === crimp.procDone){
+      crimp.procDone++;
+      if(crimp.procDone===PROSEDUR.length){ renderCrimp(); const t=$('#tangImg'); if(t) t.classList.add('crimp-anim'); toast('Klik! Konektor terjepit sempurna','ok'); }
+      else renderCrimp();
+    } else { proc.classList.remove('shake'); void proc.offsetWidth; proc.classList.add('shake'); toast('Urutannya belum tepat. Pikirkan langkah yang harus dikerjakan lebih dulu.','bad'); }
+    return;
+  }
+  const act = e.target.closest('[data-act]'); if(!act) return;
+  const a = act.dataset.act;
+  if(a==='ref') return showRef();
+  if(a==='clear' && end){ crimp[end]=Array(8).fill(null); renderCrimp(); return; }
+  if(a==='back'){ crimp.step = Math.max(1, crimp.step-1); crimp.result=null; renderCrimp(); return; }
+  if(a==='next'){ crimp.step++; renderCrimp(); return; }
+  if(a==='test') return runTester();
+  if(a==='fixA'){ crimp.step=2; crimp.result=null; renderCrimp(); return; }
+  if(a==='fixB'){ crimp.step=3; crimp.result=null; renderCrimp(); return; }
+  if(a==='other'){ crimp.step=1; crimp.result=null; renderCrimp(); return; }
+  if(a==='gotopo'){ go('topologi'); return; }
+}
+function runTester(){
+  const btn = $('#btnTest'); btn.disabled = true; $('#testResult').innerHTML=''; $('#testInfo').textContent='Menguji…';
+  $$('.led').forEach(l => l.className='led');
+  const map = crimp.A.map(k => crimp.B.indexOf(k));                 // pin master i → pin remote
+  const expected = crimp.mode==='cross' ? CROSS_MAP : STRAIGHT_MAP;
+  let i = 0;
+  const tick = () => {
+    $$('.led').forEach(l => l.className='led');
+    if(i<8){
+      const ok = map[i]===expected[i];
+      $('#lm'+i).className='led on';
+      $('#lr'+map[i]).className = 'led '+(ok?'on':'badon');
+      i++; setTimeout(tick, 520);
+    } else {
+      btn.disabled=false; btn.textContent='▶ Uji Ulang'; $('#testInfo').textContent='';
+      crimp.result = { map, expected }; showTestResult();
+    }
+  };
+  tick();
+}
+function showTestResult(){
+  const { map, expected } = crimp.result;
+  const stdA = stdOf(crimp.mode,'A'), stdB = stdOf(crimp.mode,'B');
+  const errA = crimp.A.map((k,i)=>k!==stdA[i]?i:-1).filter(i=>i>-1);
+  const errB = crimp.B.map((k,i)=>k!==stdB[i]?i:-1).filter(i=>i>-1);
+  const mapOk = map.every((m,i)=>m===expected[i]);
+  const rows = map.map((m,i)=>`<tr><td>${i+1}</td><td>${m+1}</td><td>${expected[i]+1}</td><td>${m===expected[i]?'<span class="chip ok">Sesuai</span>':'<span class="chip bad">Tidak sesuai</span>'}</td></tr>`).join('');
+  const table = `<div class="tbl-wrap"><table class="tbl" style="min-width:0"><thead><tr><th>Master</th><th>Remote</th><th>Seharusnya</th><th>Hasil</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  let html='';
+  if(!errA.length && !errB.length){
+    const first = !state.crimp[crimp.mode];
+    state.crimp[crimp.mode] = true; saveState();
+    const other = crimp.mode==='straight' ? 'Crossover' : 'Straight';
+    const allDone = state.crimp.straight && state.crimp.cross;
+    html = `<div class="alert ok"><h4>✓ Kabel ${crimp.mode==='straight'?'Straight-Through':'Crossover'} LULUS uji!</h4>
+      Lampu menyala berpasangan ${crimp.mode==='straight'?'1-1, 2-2, 3-3, sampai 8-8':'1-3, 2-6, 3-1, 6-2, sedangkan 4, 5, 7, 8 tetap sama'}. Susunan kedua ujung sudah sesuai standar.</div>
+      <div class="row" style="margin-top:12px">${allDone?'<button class="btn primary" data-act="gotopo">Lanjut ke Rakit Topologi →</button>':`<button class="btn primary" data-act="other">Buat Kabel ${other} →</button>`}<button class="btn" data-act="other">Pilih jenis kabel</button></div>`;
+    if(first) toast('Kabel lulus uji! 🎉','ok');
+  } else {
+    const detail = (end,errs,std) => errs.map(i=>`<li>Ujung ${end} pin ${i+1}: terpasang <b>${WIRES[crimp[end][i]].nama}</b>, seharusnya <b>${WIRES[std[i]].nama}</b></li>`).join('');
+    const split = mapOk ? `<p style="margin-top:8px"><b>Perhatikan:</b> lampu tester terlihat benar karena kedua ujung disusun sama, tetapi urutan warnanya tidak mengikuti standar. Pasangan kabel yang terpilin menjadi terpisah (<i>split pair</i>), sehingga kabel rawan gangguan dan kecepatannya turun. Teknisi tetap wajib mengikuti standar.</p>` : `<p style="margin-top:8px">Ada lampu remote yang menyala tidak sesuai pasangan yang diharapkan (ditandai merah).</p>`;
+    html = `<div class="alert bad"><h4>✗ Kabel belum lulus uji</h4>${split}<ul>${detail('A',errA,stdA)}${detail('B',errB,stdB)}</ul></div>
+      <p class="small muted" style="margin:10px 0 6px">Di dunia nyata, konektor yang salah harus dipotong lalu dipasang ulang.</p>
+      <div class="row">${errA.length?'<button class="btn primary" data-act="fixA">Potong &amp; Perbaiki Ujung A</button>':''}${errB.length?'<button class="btn primary" data-act="fixB">Potong &amp; Perbaiki Ujung B</button>':''}<button class="btn" data-act="ref">Lihat Standar Warna</button></div>`;
+  }
+  $('#testResult').innerHTML = html + `<h4 style="margin:16px 0 8px;font-size:14px">Tabel hasil pengujian</h4>` + table;
+  map.forEach((m,i)=>{ $('#lm'+i).className='led on'; const r=$('#lr'+m); if(r) r.className='led '+(m===expected[i]?'on':'badon'); });
+}
+
+/* =========================================================
+   6. RAKIT TOPOLOGI
+   ========================================================= */
+const TOPO = {
+  bus:{ nama:'Bus', misi:'Pasang minimal 4 PC/laptop, lalu hubungkan masing-masing ke kabel backbone.',
+    ciri:'Semua perangkat berbagi satu kabel utama (backbone) yang kedua ujungnya diberi terminator.',
+    plus:['Hemat kabel','Mudah dipasang untuk jaringan kecil'],
+    minus:['Jika backbone putus, seluruh jaringan mati','Rawan tabrakan data (collision) saat lalu lintas ramai','Kerusakan sulit dilacak'] },
+  star:{ nama:'Star', misi:'Pasang 1 switch dan minimal 4 PC/laptop, lalu hubungkan setiap PC hanya ke switch.',
+    ciri:'Setiap perangkat terhubung ke satu perangkat pusat, yaitu switch.',
+    plus:['Satu kabel putus hanya memengaruhi satu perangkat','Mudah menambah perangkat dan melacak kerusakan','Paling banyak dipakai di LAN sekolah dan kantor'],
+    minus:['Bergantung pada switch: jika switch mati, jaringan terputus','Membutuhkan kabel lebih banyak daripada bus'] },
+  ring:{ nama:'Ring', misi:'Tanpa switch, pasang minimal 4 PC/laptop dan hubungkan hingga membentuk satu lingkaran (setiap PC tersambung ke tepat 2 tetangga).',
+    ciri:'Perangkat tersambung membentuk lingkaran tertutup; data berpindah dari satu perangkat ke perangkat berikutnya.',
+    plus:['Tidak terjadi tabrakan data karena data mengalir bergiliran','Kinerja stabil saat lalu lintas tinggi'],
+    minus:['Satu titik putus dapat mengganggu seluruh lingkaran','Menambah perangkat harus memutus lingkaran'] },
+  mesh:{ nama:'Mesh', misi:'Tanpa switch, pasang minimal 4 PC/laptop lalu hubungkan setiap PC ke SEMUA PC lainnya (full mesh).',
+    ciri:'Setiap perangkat terhubung langsung ke semua perangkat lain. Jumlah kabel = n × (n − 1) ÷ 2.',
+    plus:['Sangat andal karena banyak jalur cadangan','Lalu lintas data tidak terpusat pada satu perangkat'],
+    minus:['Boros kabel dan port','Pemasangan dan perawatan rumit'] }
+};
+const TOPO_ORDER = ['bus','star','ring','mesh'];
+const HOST = { pc:'PC', laptop:'Laptop', server:'Server' };
+const NODE_LABEL = { pc:'PC', laptop:'Laptop', server:'Server', switch:'Switch' };
+const topo = { mission:'star', data:{}, sel:null, W:800, H:460, drag:null, edgeTap:null, uid:0 };
+function topoData(){
+  const m = topo.mission;
+  if(!topo.data[m]){ topo.data[m] = { nodes:[], edges:[], seq:{} }; if(m==='bus') topo.data[m].nodes.push({ id:'bb', type:'backbone', label:'Backbone', x:0, y:0 }); }
+  return topo.data[m];
+}
+const nodeOf = (t,id) => t.nodes.find(n => n.id===id);
+const nbrs = (t,id) => t.edges.filter(e => e[0]===id || e[1]===id).map(e => e[0]===id?e[1]:e[0]);
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+function bbSpan(){ return { x1:40, x2:topo.W-40, y:topo.H/2 }; }
+function topoRender(){
+  const svg = $('#topoSvg'); if(!svg) return;
+  const wrapW = svg.parentElement.clientWidth || 800;
+  const mobile = wrapW < 600;
+  topo.W = mobile ? 400 : 800; topo.H = mobile ? 500 : 460;
+  svg.setAttribute('viewBox', `0 0 ${topo.W} ${topo.H}`);
+  const t = topoData(), bb = bbSpan();
+  t.nodes.forEach(n => { if(n.type==='backbone'){ n.x=topo.W/2; n.y=bb.y; } else { n.x=clamp(n.x,44,topo.W-44); n.y=clamp(n.y,44,topo.H-52); } });
+  let h = '';
+  t.edges.forEach((e,i) => {
+    const a = nodeOf(t,e[0]), b = nodeOf(t,e[1]); if(!a||!b) return;
+    let x1=a.x,y1=a.y,x2=b.x,y2=b.y;
+    if(a.type==='backbone'||b.type==='backbone'){ const hst = a.type==='backbone'?b:a; x1=hst.x; y1=hst.y; x2=clamp(hst.x,bb.x1+10,bb.x2-10); y2=bb.y; }
+    h += `<g class="edge" data-i="${i}"><line class="edge-hit" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/><line class="edge-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/></g>`;
+  });
+  t.nodes.forEach(n => {
+    if(n.type==='backbone'){
+      h += `<g class="node bbn ${topo.sel==='bb'?'sel':''}" data-id="bb"><line x1="${bb.x1}" y1="${bb.y}" x2="${bb.x2}" y2="${bb.y}" stroke="transparent" stroke-width="26"/><line x1="${bb.x1}" y1="${bb.y}" x2="${bb.x2}" y2="${bb.y}" stroke="${topo.sel==='bb'?'#1d5fd1':'#0b2447'}" stroke-width="${topo.sel==='bb'?10:8}" stroke-linecap="round"/><rect x="${bb.x1-12}" y="${bb.y-12}" width="14" height="24" rx="3" fill="#d23c3c"/><rect x="${bb.x2-2}" y="${bb.y-12}" width="14" height="24" rx="3" fill="#d23c3c"/><text x="${topo.W/2}" y="${bb.y-14}" class="node-label">Backbone (terminator merah di ujung)</text></g>`;
+    }
+  });
+  t.nodes.forEach(n => {
+    if(n.type==='backbone') return;
+    h += `<g class="node ${topo.sel===n.id?'sel':''}" data-id="${n.id}" transform="translate(${n.x},${n.y})"><circle class="ring" r="36"/><image href="${A(n.type)}" x="-30" y="-32" width="60" height="60" preserveAspectRatio="xMidYMid meet"/><text y="52" class="node-label">${esc(n.label)}</text></g>`;
+  });
+  if(t.nodes.filter(n=>n.type!=='backbone').length===0){
+    h += `<text x="${topo.W/2}" y="${topo.mission==='bus'?topo.H/2+70:topo.H/2}" text-anchor="middle" fill="#8796ab" font-size="15">Tambahkan perangkat dengan tombol di atas</text>`;
+  }
+  svg.innerHTML = h;
+  const hosts = t.nodes.filter(n=>HOST[n.type]).length;
+  $('#topoStats').textContent = `Perangkat: ${t.nodes.filter(n=>n.type!=='backbone').length} • Kabel: ${t.edges.length}`;
+  $('#topoTabs').innerHTML = TOPO_ORDER.map(k => `<button class="${topo.mission===k?'active':''}" data-m="${k}">${state.topo[k]?'<span class="ck">✓</span>':''}${TOPO[k].nama}</button>`).join('');
+  $('#topoTools').innerHTML = ['pc','laptop','server','switch'].map(k => `<button class="btn" data-add="${k}"><img src="${A(k)}" alt="">+ ${NODE_LABEL[k]}</button>`).join('') +
+    `<button class="btn" data-tool="del" ${topo.sel && topo.sel!=='bb'?'':'disabled'}>Hapus terpilih</button><button class="btn" data-tool="reset">Reset</button><button class="btn primary" data-tool="check">Periksa</button>`;
+  const M = TOPO[topo.mission];
+  $('#topoMission').innerHTML = `<span class="chip ${state.topo[topo.mission]?'ok':'blue'}">${state.topo[topo.mission]?'✓ Misi selesai':'Misi'}</span><h3 style="margin-top:8px">Topologi ${M.nama}</h3><p class="small">${esc(M.misi)}</p>${topo.mission==='mesh'&&hosts>=2?`<p class="small muted" style="margin-top:8px">Dengan ${hosts} perangkat, full mesh butuh ${hosts*(hosts-1)/2} kabel.</p>`:''}`;
+}
+function freeSpot(){
+  const t = topoData(), W=topo.W, H=topo.H, cands=[];
+  if(topo.mission==='bus'){
+    const xs=[]; for(let x=80;x<=W-80;x+=W<600?100:130) xs.push(x);
+    [H/2-110, H/2+110].forEach(y => xs.forEach(x => cands.push([x,y])));
+    cands.sort((p,q)=>p[0]-q[0]);
+  } else {
+    const cx=W/2, cy=H/2-6, r=Math.min(W,H)/2-70;
+    for(let i=0;i<8;i++){ const a=-Math.PI/2+i*Math.PI/4; cands.push([Math.round(cx+r*Math.cos(a)), Math.round(cy+r*Math.sin(a))]); }
+    cands.push([cx,cy]);
+    for(let y=60;y<H-50;y+=95) for(let x=60;x<W-40;x+=100) cands.push([x,y]);
+  }
+  for(const [x,y] of cands){ if(t.nodes.every(n => n.type==='backbone' || Math.hypot(n.x-x,n.y-y) > 84)) return {x,y}; }
+  return { x: 60+Math.random()*(W-120), y: 60+Math.random()*(H-140) };
+}
+function topoAdd(type){
+  const t = topoData();
+  if(t.nodes.filter(n=>n.type!=='backbone').length>=10){ toast('Maksimal 10 perangkat di kanvas','bad'); return; }
+  const p = (type==='switch' && topo.mission==='star' && !t.nodes.some(n=>n.type==='switch')) ? {x:topo.W/2,y:topo.H/2-6} : freeSpot();
+  t.seq[type] = (t.seq[type]||0)+1;
+  t.nodes.push({ id:'n'+(++topo.uid), type, label:NODE_LABEL[type]+t.seq[type], x:p.x, y:p.y });
+  $('#topoResult').innerHTML=''; topoRender();
+}
+function topoToggleEdge(a,b){
+  const t = topoData(); if(a===b) return;
+  const i = t.edges.findIndex(e => (e[0]===a&&e[1]===b)||(e[0]===b&&e[1]===a));
+  if(i>-1){ t.edges.splice(i,1); toast('Kabel dilepas'); } else t.edges.push([a,b]);
+  $('#topoResult').innerHTML='';
+}
+function svgPt(e){ const svg=$('#topoSvg'); const p=svg.createSVGPoint(); p.x=e.clientX; p.y=e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+function topoCheck(){
+  const t = topoData(), m = topo.mission;
+  const hosts = t.nodes.filter(n => HOST[n.type]);
+  const sws = t.nodes.filter(n => n.type==='switch');
+  const err = [];
+  const isEdge = (a,b) => t.edges.some(e => (e[0]===a&&e[1]===b)||(e[0]===b&&e[1]===a));
+  if(hosts.length<4) err.push(`Tambahkan minimal 4 PC/laptop/server (sekarang ${hosts.length}).`);
+  if(m==='star'){
+    if(sws.length!==1) err.push(sws.length===0?'Topologi star membutuhkan 1 switch sebagai pusat.':'Gunakan tepat 1 switch sebagai pusat.');
+    else hosts.forEach(hs => { const nb=nbrs(t,hs.id); if(nb.length!==1||nb[0]!==sws[0].id) err.push(`${hs.label} harus tersambung dengan 1 kabel langsung ke switch saja.`); });
+  }
+  if(m==='bus'){
+    if(sws.length) err.push('Topologi bus tidak memakai switch. Hapus switch dari kanvas.');
+    hosts.forEach(hs => { const nb=nbrs(t,hs.id); if(nb.length!==1||nb[0]!=='bb') err.push(`${hs.label} harus tersambung 1 kabel ke backbone saja.`); });
+  }
+  if(m==='ring'||m==='mesh'){
+    if(sws.length) err.push(`Topologi ${TOPO[m].nama.toLowerCase()} tidak memakai switch. Hapus switch dari kanvas.`);
+  }
+  if(m==='ring' && hosts.length>=4){
+    hosts.forEach(hs => { const d=nbrs(t,hs.id).length; if(d!==2) err.push(`${hs.label} tersambung ke ${d} perangkat, seharusnya tepat 2.`); });
+    if(!err.length){
+      const seen=new Set([hosts[0].id]), st=[hosts[0].id];
+      while(st.length){ const c=st.pop(); nbrs(t,c).forEach(x=>{ if(!seen.has(x)){ seen.add(x); st.push(x); } }); }
+      if(seen.size!==hosts.length) err.push('Kabel membentuk lebih dari satu lingkaran. Semua perangkat harus berada dalam satu lingkaran yang sama.');
+    }
+  }
+  if(m==='mesh' && hosts.length>=4){
+    let miss=0; for(let i=0;i<hosts.length;i++) for(let j=i+1;j<hosts.length;j++) if(!isEdge(hosts[i].id,hosts[j].id)) miss++;
+    if(miss) err.push(`Masih kurang ${miss} kabel. Full mesh dengan ${hosts.length} perangkat membutuhkan ${hosts.length*(hosts.length-1)/2} kabel.`);
+  }
+  const M = TOPO[m];
+  if(err.length){
+    $('#topoResult').innerHTML = `<div class="alert bad"><h4>Belum tepat</h4><ul>${[...new Set(err)].slice(0,6).map(x=>'<li>'+esc(x)+'</li>').join('')}</ul></div>`;
+    return;
+  }
+  const first = !state.topo[m]; state.topo[m]=true; saveState();
+  const next = TOPO_ORDER.find(k => !state.topo[k]);
+  $('#topoResult').innerHTML = `<div class="alert ok"><h4>✓ Topologi ${M.nama} benar!</h4>${esc(M.ciri)}</div>
+    <div class="card" style="margin-top:12px"><h3>Kelebihan</h3><ul>${M.plus.map(x=>'<li>'+esc(x)+'</li>').join('')}</ul><h3 style="margin-top:10px">Kekurangan</h3><ul>${M.minus.map(x=>'<li>'+esc(x)+'</li>').join('')}</ul>
+    <div class="row" style="margin-top:12px">${next?`<button class="btn primary" data-next-m="${next}">Misi berikutnya: ${TOPO[next].nama} →</button>`:'<button class="btn primary" data-goto="ip">Lanjut ke IP &amp; Ping →</button>'}</div></div>`;
+  if(first) toast(`Misi topologi ${M.nama} selesai! 🎉`,'ok');
+  topoRender();
+}
+function initTopo(){
+  const svg = $('#topoSvg');
+  svg.addEventListener('pointerdown', e => {
+    const g = e.target.closest('.node'), ed = e.target.closest('.edge');
+    if(g){
+      const n = nodeOf(topoData(), g.dataset.id); if(!n) return;
+      const p = svgPt(e);
+      topo.drag = { id:n.id, sx:p.x, sy:p.y, ox:n.x, oy:n.y, moved:false };
+      try{ svg.setPointerCapture(e.pointerId); }catch(_){}
+      e.preventDefault();
+    } else if(ed){ topo.edgeTap = +ed.dataset.i; }
+    else { topo.edgeTap=null; if(topo.sel){ topo.sel=null; topoRender(); } }
+  });
+  svg.addEventListener('pointermove', e => {
+    const d = topo.drag; if(!d) return;
+    const p = svgPt(e), dx=p.x-d.sx, dy=p.y-d.sy;
+    if(!d.moved && Math.hypot(dx,dy) > 8) d.moved = true;
+    if(d.moved){ const n = nodeOf(topoData(), d.id); if(n && n.type!=='backbone'){ n.x=clamp(d.ox+dx,44,topo.W-44); n.y=clamp(d.oy+dy,44,topo.H-52); topoRender(); } }
+  });
+  const end = () => {
+    const d = topo.drag;
+    if(d){
+      if(!d.moved){
+        if(!topo.sel) topo.sel = d.id;
+        else if(topo.sel===d.id) topo.sel = null;
+        else { if(topo.sel==='bb' && d.id==='bb'){} else topoToggleEdge(topo.sel, d.id); topo.sel = null; }
+        topoRender();
+      }
+      topo.drag = null;
+    } else if(topo.edgeTap!==null){
+      const t=topoData(); if(t.edges[topo.edgeTap]){ t.edges.splice(topo.edgeTap,1); toast('Kabel dihapus'); $('#topoResult').innerHTML=''; topoRender(); }
+      topo.edgeTap = null;
+    }
+  };
+  svg.addEventListener('pointerup', end);
+  svg.addEventListener('pointercancel', () => { topo.drag=null; topo.edgeTap=null; });
+  $('#topoTools').addEventListener('click', e => {
+    const add = e.target.closest('[data-add]'); if(add) return topoAdd(add.dataset.add);
+    const tool = e.target.closest('[data-tool]'); if(!tool) return;
+    const t = topoData();
+    if(tool.dataset.tool==='del' && topo.sel && topo.sel!=='bb'){ t.nodes=t.nodes.filter(n=>n.id!==topo.sel); t.edges=t.edges.filter(x=>!x.includes(topo.sel)); topo.sel=null; $('#topoResult').innerHTML=''; topoRender(); }
+    if(tool.dataset.tool==='reset'){ delete topo.data[topo.mission]; topo.sel=null; $('#topoResult').innerHTML=''; topoRender(); }
+    if(tool.dataset.tool==='check') topoCheck();
+  });
+  $('#topoTabs').addEventListener('click', e => { const b=e.target.closest('[data-m]'); if(!b) return; topo.mission=b.dataset.m; topo.sel=null; $('#topoResult').innerHTML=''; topoRender(); });
+  $('#topoResult').addEventListener('click', e => {
+    const n = e.target.closest('[data-next-m]'); if(n){ topo.mission=n.dataset.nextM; topo.sel=null; $('#topoResult').innerHTML=''; topoRender(); window.scrollTo(0,0); return; }
+    const g = e.target.closest('[data-goto]'); if(g) go(g.dataset.goto);
+  });
+  let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt=setTimeout(()=>{ if($('#page-topologi').classList.contains('active')) topoRender(); }, 150); });
+}
+
+/* =========================================================
+   7. IP & PING
+   ========================================================= */
+const IP_POS = { PC1:[52,204], PC2:[158,224], PC3:[262,224], PC4:[368,204] };
+let ip;
+function ipResetScenario(){
+  ip = { sel:'PC1', busy:false, hosts:[
+    { id:'PC1', ip:'192.168.10.1', mask:'255.255.255.0' },
+    { id:'PC2', ip:'192.168.10.2', mask:'255.255.255.0' },
+    { id:'PC3', ip:'', mask:'' },
+    { id:'PC4', ip:'192.168.1.4',  mask:'255.255.255.0' } ], term:{} };
+  ip.hosts.forEach(h => ip.term[h.id] = [{t:'Microsoft Windows [Version 10.0]\n(c) Lab Maya Jaringan Dasar. Ketik help untuk daftar perintah.\n', c:'info'}]);
+  if($('#ipSvg')) { ipRender(); ipSelect('PC1'); }
+}
+function ipToInt(s){
+  const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(String(s).trim()); if(!m) return null;
+  const o = m.slice(1).map(Number); if(o.some(x => x>255)) return null;
+  return ((o[0]*16777216) + (o[1]*65536) + (o[2]*256) + o[3]) >>> 0;
+}
+const intToIp = n => [n>>>24, (n>>>16)&255, (n>>>8)&255, n&255].join('.');
+function prefixOf(maskInt){ let c=0, n=maskInt>>>0; while(n & 0x80000000){ c++; n=(n<<1)>>>0; } return c; }
+function maskOk(maskInt){ if(maskInt===null || maskInt===0) return false; const inv=(~maskInt)>>>0; return ((inv+1) & inv)===0; }
+const netOf = (ipInt, maskInt) => (ipInt & maskInt)>>>0;
+function validateHost(ipStr, maskStr){
+  const a = ipToInt(ipStr), m = ipToInt(maskStr);
+  if(a===null) return 'Format alamat IP tidak valid. Gunakan 4 angka 0–255 yang dipisah titik, contoh: 192.168.10.3';
+  if(m===null || !maskOk(m)) return 'Subnet mask tidak valid. Contoh yang benar: 255.255.255.0';
+  if(prefixOf(m)>30) return 'Subnet mask terlalu kecil untuk jaringan host. Gunakan misalnya 255.255.255.0';
+  const o1 = a>>>24;
+  if(o1===0) return 'Alamat IP tidak boleh diawali angka 0.';
+  if(o1===127) return 'Alamat 127.x.x.x adalah alamat loopback, tidak bisa dipakai untuk host.';
+  if(o1>=224) return 'Alamat 224 ke atas adalah alamat multicast/eksperimen, tidak bisa dipakai untuk host.';
+  const hostPart = (a & (~m>>>0))>>>0, bcast = (~m)>>>0;
+  if(hostPart===0) return `${ipStr} adalah alamat network (alamat jaringan), bukan alamat host.`;
+  if(hostPart===bcast) return `${ipStr} adalah alamat broadcast, tidak bisa dipakai untuk host.`;
+  return null;
+}
+const H = id => ip.hosts.find(h => h.id===id);
+const hasIp = h => !!(h && h.ip && h.mask && !validateHost(h.ip, h.mask));
+function dupOf(h){ return hasIp(h) ? ip.hosts.filter(x => x!==h && x.ip===h.ip) : []; }
+function ipRender(){
+  const sw = [210,66];
+  let s = '';
+  ip.hosts.forEach(h => { const [x,y]=IP_POS[h.id]; s += `<line x1="${sw[0]}" y1="${sw[1]+18}" x2="${x}" y2="${y-30}" stroke="#2f6fe0" stroke-width="3.5" stroke-linecap="round"/>`; });
+  s += `<image href="${A('switch')}" x="${sw[0]-48}" y="${sw[1]-46}" width="96" height="96"/><text x="${sw[0]}" y="${sw[1]+46}" class="ip-name">Switch</text>`;
+  ip.hosts.forEach(h => {
+    const [x,y] = IP_POS[h.id]; const ok = hasIp(h);
+    s += `<g class="pcnode ${ip.sel===h.id?'sel':''}" data-pc="${h.id}"><circle class="ring" cx="${x}" cy="${y}" r="32"/><image href="${A('pc')}" x="${x-27}" y="${y-29}" width="54" height="54"/>
+      <text x="${x}" y="${y+48}" class="ip-name">${h.id}</text>
+      <text x="${x}" y="${y+63}" class="ip-lbl" fill="${ok?'#0f1e33':'#d23c3c'}">${ok?h.ip:'belum diatur'}</text>
+      ${ok?`<text x="${x}" y="${y+77}" class="ip-lbl" fill="#5a6a80">/${prefixOf(ipToInt(h.mask))}</text>`:''}</g>`;
+  });
+  $('#ipSvg').innerHTML = s;
+  const M = [
+    ['m1','Isi IP <b>PC3</b> agar berada di jaringan yang sama dengan PC1 dan tidak bentrok dengan PC lain.'],
+    ['m2','Lakukan <b>ping dari PC1 ke PC3</b> sampai berhasil (Reply).'],
+    ['m3','Ping dari <b>PC2 ke PC4</b> gagal. Temukan penyebabnya, perbaiki konfigurasi PC4, lalu ping lagi sampai berhasil.'],
+    ['m4','Jalankan perintah <b>ipconfig</b> untuk melihat konfigurasi IP sebuah PC.']
+  ];
+  $('#ipMissions').innerHTML = M.map(([k,t]) => `<li class="${state.ip[k]?'done':''}"><span class="k">${state.ip[k]?'✓':''}</span><span>${t}</span></li>`).join('');
+}
+function ipSelect(id){
+  ip.sel = id; const h = H(id);
+  $('#cfgTitle').textContent = 'Konfigurasi '+id;
+  $('#cfgIp').value = h.ip; $('#cfgMask').value = h.mask; $('#cfgMsg').innerHTML='';
+  $('#termTitle').textContent = 'Command Prompt — '+id;
+  $('#termPrompt').textContent = 'C:\\Users\\'+id+'>';
+  renderTerm(); ipRender();
+}
+function renderTerm(){
+  const out = $('#termOut');
+  out.innerHTML = ip.term[ip.sel].map(l => `<div class="${l.c||''}">${esc(l.t)}</div>`).join('');
+  out.scrollTop = out.scrollHeight;
+}
+function tline(id, t, c){ ip.term[id].push({t, c}); if(ip.term[id].length>300) ip.term[id].splice(0,50); if(id===ip.sel){ const out=$('#termOut'); const d=document.createElement('div'); d.className=c||''; d.textContent=t; out.appendChild(d); out.scrollTop=out.scrollHeight; } }
+function mission(k, msg){ if(!state.ip[k]){ state.ip[k]=true; saveState(); ipRender(); toast(msg,'ok'); } }
+function cfgSave(){
+  const h = H(ip.sel), ipStr = $('#cfgIp').value.trim(), maskStr = $('#cfgMask').value.trim();
+  if(!ipStr && !maskStr){ h.ip=''; h.mask=''; $('#cfgMsg').innerHTML='<div class="alert warn">Konfigurasi IP dikosongkan.</div>'; ipRender(); return; }
+  const err = validateHost(ipStr, maskStr);
+  if(err){ $('#cfgMsg').innerHTML = `<div class="alert bad">${esc(err)}</div>`; return; }
+  h.ip = intToIp(ipToInt(ipStr)); h.mask = intToIp(ipToInt(maskStr));
+  const dup = dupOf(h);
+  if(dup.length){ $('#cfgMsg').innerHTML = `<div class="alert warn"><b>Peringatan konflik IP:</b> alamat ${esc(h.ip)} juga dipakai oleh ${dup.map(d=>d.id).join(', ')}. Dua perangkat tidak boleh memakai IP yang sama dalam satu jaringan.</div>`; }
+  else { $('#cfgMsg').innerHTML = `<div class="alert ok">Tersimpan. ${h.id} memakai ${esc(h.ip)} /${prefixOf(ipToInt(h.mask))} (jaringan ${intToIp(netOf(ipToInt(h.ip),ipToInt(h.mask)))}).</div>`; }
+  ipRender();
+  const p1 = H('PC1'), p3 = H('PC3');
+  if(hasIp(p3) && hasIp(p1) && !dupOf(p3).length && netOf(ipToInt(p3.ip),ipToInt(p1.mask))===netOf(ipToInt(p1.ip),ipToInt(p1.mask)) && p3.mask===p1.mask) mission('m1','Misi 1 selesai: PC3 sudah satu jaringan dengan PC1 ✓');
+}
+const delay = ms => new Promise(r => setTimeout(r, ms));
+async function runCmd(raw){
+  const id = ip.sel, line = raw.trim();
+  tline(id, `C:\\Users\\${id}>${line}`, 'cmd');
+  if(!line) return;
+  const parts = line.split(/\s+/), cmd = parts[0].toLowerCase();
+  if(cmd==='cls' || cmd==='clear'){ ip.term[id] = []; renderTerm(); return; }
+  if(cmd==='help'){ tline(id, 'Perintah yang tersedia:\n  ipconfig        Menampilkan konfigurasi IP komputer ini\n  ping <alamat>   Menguji koneksi ke alamat IP atau nama PC (contoh: ping 192.168.10.2)\n  cls             Membersihkan layar\n  help            Menampilkan bantuan ini', 'info'); return; }
+  if(cmd==='ipconfig'){
+    const h = H(id);
+    tline(id, `\nWindows IP Configuration\n\nEthernet adapter Ethernet:\n\n   Connection-specific DNS Suffix  . :\n   IPv4 Address. . . . . . . . . . . : ${hasIp(h)?h.ip:'(belum diatur)'}\n   Subnet Mask . . . . . . . . . . . : ${hasIp(h)?h.mask:'(belum diatur)'}\n   Default Gateway . . . . . . . . . :\n`);
+    if(hasIp(h)) tline(id, `→ Info: alamat jaringan ${h.id} adalah ${intToIp(netOf(ipToInt(h.ip),ipToInt(h.mask)))}/${prefixOf(ipToInt(h.mask))}.`, 'info');
+    mission('m4','Misi 4 selesai: kamu sudah memakai ipconfig ✓');
+    return;
+  }
+  if(cmd==='ping'){
+    const arg = parts.slice(1).filter(p => !p.startsWith('-') && !/^\d+$/.test(p)).pop();
+    if(!arg){ tline(id, 'Cara pakai: ping <alamat IP>  contoh: ping 192.168.10.2', 'info'); return; }
+    if(ip.busy){ tline(id,'Tunggu ping sebelumnya selesai.','info'); return; }
+    ip.busy = true; try{ await doPing(id, arg); } finally { ip.busy = false; }
+    return;
+  }
+  tline(id, `'${parts[0]}' is not recognized as an internal or external command,\noperable program or batch file.`);
+  tline(id, '→ Ketik help untuk melihat perintah yang tersedia.', 'info');
+}
+async function doPing(id, arg){
+  const src = H(id);
+  let target = arg;
+  const byName = ip.hosts.find(h => h.id.toLowerCase()===arg.toLowerCase());
+  if(byName){ if(!hasIp(byName)){ tline(id, `Ping request could not find host ${arg}. Please check the name and try again.`); return; } target = byName.ip; }
+  const tInt = ipToInt(target);
+  if(tInt===null){ tline(id, `Ping request could not find host ${arg}. Please check the name and try again.`); tline(id,'→ Alamat IP tujuan tidak valid. Periksa penulisannya.','bad'); return; }
+  target = intToIp(tInt);
+  if(!hasIp(src)){ tline(id, 'PING: transmit failed. General failure.'); tline(id, `→ Gagal: ${id} belum memiliki alamat IP. Atur IP terlebih dahulu.`, 'bad'); return; }
+  tline(id, `\nPinging ${target} with 32 bytes of data:`);
+  const sInt = ipToInt(src.ip), sMask = ipToInt(src.mask);
+  const stats = (rec) => tline(id, `\nPing statistics for ${target}:\n    Packets: Sent = 4, Received = ${rec}, Lost = ${4-rec} (${(4-rec)*25}% loss),`);
+  if(target===src.ip){
+    for(let i=0;i<4;i++){ await delay(380); tline(id, `Reply from ${target}: bytes=32 time<1ms TTL=128`); }
+    stats(4); tline(id, '→ Ini alamat IP komputer sendiri, jadi balasan selalu berhasil (tidak melewati jaringan).', 'info'); return;
+  }
+  if(netOf(tInt,sMask)!==netOf(sInt,sMask)){
+    for(let i=0;i<4;i++){ await delay(380); tline(id, 'PING: transmit failed. General failure.'); }
+    stats(0);
+    tline(id, `→ Gagal: ${target} berada di luar jaringan ${id} (${intToIp(netOf(sInt,sMask))}/${prefixOf(sMask)}). Tanpa router/default gateway, komputer tidak bisa menjangkau jaringan lain.`, 'bad'); return;
+  }
+  const dests = ip.hosts.filter(h => h!==src && hasIp(h) && h.ip===target);
+  if(!dests.length){
+    for(let i=0;i<4;i++){ await delay(600); tline(id, `Reply from ${src.ip}: Destination host unreachable.`); }
+    stats(4);
+    tline(id, `→ Gagal: tidak ada perangkat yang memakai alamat ${target} di jaringan ini. ("Received = 4" di atas berasal dari komputer sendiri, bukan dari tujuan.)`, 'bad'); return;
+  }
+  const dst = dests[0];
+  const dNet = netOf(sInt, ipToInt(dst.mask)), dSelf = netOf(ipToInt(dst.ip), ipToInt(dst.mask));
+  if(dNet!==dSelf){
+    for(let i=0;i<4;i++){ await delay(900); tline(id, 'Request timed out.'); }
+    stats(0);
+    tline(id, `→ Gagal: ${dst.id} menerima ping, tetapi subnet mask-nya membuat ${id} dianggap berada di jaringan lain sehingga balasan tidak terkirim. Samakan subnet mask.`, 'bad'); return;
+  }
+  for(let i=0;i<4;i++){ await delay(420); const tm = Math.random()<.6 ? 'time<1ms' : 'time='+(1+Math.floor(Math.random()*2))+'ms'; tline(id, `Reply from ${target}: bytes=32 ${tm} TTL=128`); }
+  stats(4);
+  tline(id, `Approximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 2ms, Average = 0ms`);
+  const conflict = dests.length>1 || dupOf(src).length>0;
+  if(conflict){ tline(id, `→ Ada balasan, tetapi terjadi KONFLIK IP: alamat ${dupOf(src).length?src.ip:target} dipakai lebih dari satu PC. Koneksi bisa kacau. Perbaiki agar setiap PC memiliki IP unik.`, 'bad'); return; }
+  tline(id, `→ Berhasil: ${id} dan ${dst.id} berada di jaringan yang sama (${intToIp(netOf(sInt,sMask))}/${prefixOf(sMask)}).`, 'ok');
+  if(id==='PC1' && dst.id==='PC3') mission('m2','Misi 2 selesai: ping PC1 → PC3 berhasil ✓');
+  if(id==='PC2' && dst.id==='PC4') mission('m3','Misi 3 selesai: konfigurasi PC4 sudah benar ✓');
+}
+function initIp(){
+  ipResetScenario();
+  $('#ipSvg').addEventListener('click', e => { const g=e.target.closest('[data-pc]'); if(g) ipSelect(g.dataset.pc); });
+  $('#cfgSave').addEventListener('click', cfgSave);
+  ['#cfgIp','#cfgMask'].forEach(s => $(s).addEventListener('keydown', e => { if(e.key==='Enter') cfgSave(); }));
+  $('#termIn').addEventListener('keydown', e => { if(e.key==='Enter'){ const v=e.target.value; e.target.value=''; runCmd(v); } });
+  $('#qcmd').addEventListener('click', e => { const b=e.target.closest('[data-c]'); if(!b) return; const c=b.dataset.c; if(c.endsWith(' ')){ const i=$('#termIn'); i.value=c; i.focus(); } else runCmd(c); });
+  $('#ipReset').addEventListener('click', () => { ipResetScenario(); toast('Skenario dikembalikan ke awal'); });
+}
+
+/* =========================================================
+   8. EVALUASI
+   ========================================================= */
+const BANK = [
+  { q:'Perangkat yang menghubungkan banyak komputer dalam satu LAN dan meneruskan data hanya ke port tujuan berdasarkan MAC address adalah …', o:['Switch','Router','Modem','Access point'], e:'Switch bekerja di Layer 2 dan memakai MAC address untuk meneruskan data ke port yang tepat.' },
+  { q:'Perangkat yang menghubungkan dua jaringan berbeda dan menentukan jalur paket berdasarkan alamat IP adalah …', o:['Router','Switch','Hub','LAN tester'], e:'Router bekerja di Layer 3 (network) dan melakukan routing berdasarkan alamat IP.' },
+  { q:'Fungsi utama access point adalah …', o:['Menyediakan koneksi Wi-Fi agar perangkat nirkabel dapat bergabung ke LAN','Menguji sambungan pin kabel UTP','Mengubah sinyal cahaya fiber menjadi data digital','Menyimpan data seluruh client'], e:'Access point memancarkan sinyal Wi-Fi dan menjembatani perangkat nirkabel ke jaringan kabel.' },
+  { q:'Perangkat yang mengubah sinyal cahaya pada kabel fiber optik dari ISP menjadi data untuk jaringan lokal adalah …', o:['ONT (modem fiber)','Switch','Access point','Server'], e:'ONT (Optical Network Terminal) adalah modem untuk layanan internet fiber optik.' },
+  { q:'Urutan warna standar T568B untuk pin 1, 2, dan 3 adalah …', o:['Putih-Oranye, Oranye, Putih-Hijau','Putih-Hijau, Hijau, Putih-Oranye','Oranye, Putih-Oranye, Hijau','Putih-Biru, Biru, Putih-Oranye'], e:'T568B: Putih-Oranye, Oranye, Putih-Hijau, Biru, Putih-Biru, Hijau, Putih-Coklat, Coklat.' },
+  { q:'Kabel straight-through digunakan untuk menghubungkan …', o:['PC ke switch','PC ke PC','Laptop ke laptop','Switch ke switch tanpa Auto-MDIX'], e:'Straight dipakai untuk perangkat berbeda jenis, misalnya PC ke switch.' },
+  { q:'Kabel crossover dibuat dengan susunan …', o:['Satu ujung T568A dan ujung lainnya T568B','Kedua ujung T568B','Kedua ujung T568A','Satu ujung T568B dan ujung lainnya terbalik total'], e:'Crossover menukar pasangan oranye dan hijau: satu ujung T568A, ujung lain T568B.' },
+  { q:'Saat menguji kabel crossover dengan LAN tester, lampu pin 1 pada master menyala bersamaan dengan lampu pin … pada remote.', o:['3','1','2','6'], e:'Pada crossover: 1→3, 2→6, 3→1, 6→2, sedangkan pin 4, 5, 7, 8 tetap.' },
+  { q:'Alat yang digunakan untuk menjepit konektor RJ45 ke kabel UTP adalah …', o:['Tang crimping','LAN tester','Obeng plus','Punch down tool'], e:'Tang crimping menekan pin RJ45 agar menembus dan mengunci kabel.' },
+  { q:'Topologi yang semua perangkatnya terhubung ke satu perangkat pusat (switch) disebut topologi …', o:['Star','Bus','Ring','Mesh'], e:'Pada topologi star, semua perangkat terhubung ke switch sebagai pusat.' },
+  { q:'Kelemahan utama topologi star adalah …', o:['Jika switch pusat rusak, seluruh jaringan terputus','Satu kabel putus mematikan seluruh jaringan','Tidak bisa menambah perangkat','Membutuhkan terminator di kedua ujung'], e:'Topologi star bergantung pada perangkat pusat (switch).' },
+  { q:'Jaringan full mesh dengan 5 komputer membutuhkan kabel sebanyak …', o:['10','5','8','20'], e:'Rumus n × (n − 1) ÷ 2 = 5 × 4 ÷ 2 = 10 kabel.' },
+  { q:'Topologi yang memakai satu kabel utama (backbone) dengan terminator di kedua ujungnya adalah topologi …', o:['Bus','Star','Ring','Mesh'], e:'Topologi bus menggunakan backbone yang ujungnya diberi terminator.' },
+  { q:'Subnet mask 255.255.255.0 sama dengan prefix …', o:['/24','/8','/16','/30'], e:'255.255.255.0 memiliki 24 bit bernilai 1, sehingga ditulis /24.' },
+  { q:'Alamat IP yang berada dalam satu jaringan dengan 192.168.10.1/24 adalah …', o:['192.168.10.25','192.168.1.10','192.168.11.1','10.168.10.1'], e:'Untuk /24, tiga oktet pertama harus sama: 192.168.10.x.' },
+  { q:'Pada jaringan 192.168.10.0/24, alamat 192.168.10.255 merupakan …', o:['Alamat broadcast','Alamat host pertama','Alamat network','Alamat gateway'], e:'Alamat dengan bagian host bernilai maksimal (255 pada /24) adalah alamat broadcast.' },
+  { q:'Perintah yang digunakan untuk menguji koneksi ke komputer lain adalah …', o:['ping','ipconfig','cls','hostname'], e:'Ping mengirim paket ICMP dan menunggu balasan dari komputer tujuan.' },
+  { q:'Perintah untuk melihat konfigurasi alamat IP pada Windows adalah …', o:['ipconfig','ping','netstat -r','cls'], e:'ipconfig menampilkan IPv4 address, subnet mask, dan default gateway.' },
+  { q:'PC A (192.168.10.5/24) melakukan ping ke PC B (192.168.20.5/24) tanpa router. Ping gagal karena …', o:['Kedua PC berada di jaringan yang berbeda','Kabel yang dipakai crossover','Subnet mask keduanya sama','Switch belum dinyalakan ulang'], e:'192.168.10.0/24 dan 192.168.20.0/24 adalah jaringan berbeda, perlu router untuk menghubungkannya.' },
+  { q:'Hasil ping "Request timed out" menunjukkan bahwa …', o:['Tidak ada balasan dari perangkat tujuan dalam batas waktu','Koneksi berhasil dengan sangat cepat','Alamat IP pengirim belum diatur','Perintah ping salah ketik'], e:'Request timed out berarti paket balasan tidak diterima dalam batas waktu yang ditentukan.' },
+  { q:'Panjang maksimal kabel UTP dalam satu segmen jaringan Ethernet adalah …', o:['100 meter','50 meter','185 meter','500 meter'], e:'Standar Ethernet kabel UTP membatasi satu segmen maksimal 100 meter.' },
+  { q:'Dua komputer dalam satu jaringan memakai alamat IP yang sama. Kondisi ini disebut …', o:['Konflik IP','Split pair','Broadcast storm','Loopback'], e:'Konflik IP terjadi jika lebih dari satu perangkat memakai alamat yang sama.' }
+];
+const QN = 15, KKTP = 75;
+let quiz;
+function quizStart(toIntro){
+  quiz = { stage: toIntro ? 'intro' : 'intro', list:[], idx:0, answers:[] };
+  renderQuiz();
+}
+function renderQuiz(){
+  const el = $('#quiz');
+  if(quiz.stage==='intro'){
+    el.innerHTML = `<div class="card">
+      <span class="chip blue">Evaluasi Akhir</span>
+      <h2 style="margin:8px 0 6px;font-size:24px">Uji Pemahaman Jaringan Dasar</h2>
+      <p class="muted">${QN} soal pilihan ganda diambil acak dari bank soal. Setiap jawaban langsung diberi pembahasan. Batas ketuntasan (KKTP): <b>${KKTP}</b>.</p>
+      ${state.evalBest!==null?`<div class="alert ${state.evalBest>=KKTP?'ok':'warn'}" style="margin-top:12px">Nilai terbaik${state.evalName?' '+esc(state.evalName):''}: <b>${state.evalBest}</b> ${state.evalBest>=KKTP?'(Tuntas)':'(Belum tuntas)'}</div>`:''}
+      <div class="form" style="margin-top:14px;max-width:420px">
+        <div class="field"><label for="qName">Nama siswa</label><input id="qName" style="font-family:inherit" value="${esc(state.evalName||'')}" placeholder="Tulis nama lengkap"></div>
+        <div class="field"><label for="qKelas">Kelas</label><input id="qKelas" style="font-family:inherit" placeholder="contoh: X TKJ 1"></div>
+        <div><button class="btn primary" id="qStart">Mulai Evaluasi →</button></div>
+      </div></div>`;
+    $('#qStart').onclick = () => {
+      const name = $('#qName').value.trim();
+      if(!name){ toast('Tulis nama terlebih dahulu','bad'); $('#qName').focus(); return; }
+      quiz.name = name; quiz.kelas = $('#qKelas').value.trim();
+      quiz.list = shuffle(BANK).slice(0,QN).map(b => ({ q:b.q, e:b.e, ans:b.o[0], opts:shuffle(b.o) }));
+      quiz.idx = 0; quiz.answers = []; quiz.stage='q'; renderQuiz();
+    };
+    return;
+  }
+  if(quiz.stage==='q'){
+    const it = quiz.list[quiz.idx], answered = quiz.answers[quiz.idx]!==undefined;
+    el.innerHTML = `<div class="card">
+      <div class="row" style="justify-content:space-between"><b>Soal ${quiz.idx+1} dari ${QN}</b><span class="muted small">${esc(quiz.name)}</span></div>
+      <div class="qprog"><i style="width:${(quiz.idx)/QN*100}%"></i></div>
+      <div class="qtext">${esc(it.q)}</div>
+      <div class="opts">${it.opts.map((o,i)=>{
+        let cls=''; if(answered){ if(o===it.ans) cls='right'; else if(o===quiz.answers[quiz.idx]) cls='wrong'; }
+        return `<button class="opt ${cls}" data-o="${i}" ${answered?'disabled':''}><span class="l">${'ABCD'[i]}</span><span>${esc(o)}</span></button>`; }).join('')}</div>
+      ${answered?`<div class="alert ${quiz.answers[quiz.idx]===it.ans?'ok':'bad'}" style="margin-top:14px"><b>${quiz.answers[quiz.idx]===it.ans?'Benar!':'Kurang tepat.'}</b> ${esc(it.e)}</div>
+      <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn primary" id="qNext">${quiz.idx+1<QN?'Soal Berikutnya →':'Lihat Hasil →'}</button></div>`:''}
+    </div>`;
+    $$('.opt',el).forEach(b => b.onclick = () => { quiz.answers[quiz.idx] = it.opts[+b.dataset.o]; renderQuiz(); });
+    const n = $('#qNext'); if(n) n.onclick = () => { if(quiz.idx+1<QN){ quiz.idx++; } else { quiz.stage='result'; } renderQuiz(); window.scrollTo(0,0); };
+    return;
+  }
+  if(quiz.stage==='result'){
+    const benar = quiz.list.filter((it,i)=>quiz.answers[i]===it.ans).length;
+    const nilai = Math.round(benar/QN*100), tuntas = nilai>=KKTP;
+    if(!quiz.saved){ quiz.saved=true; state.evalName=quiz.name; if(state.evalBest===null || nilai>state.evalBest) state.evalBest=nilai; saveState(); if(tuntas) toast('Selamat, kamu tuntas! 🎉','ok'); }
+    const salah = quiz.list.map((it,i)=>({it,a:quiz.answers[i]})).filter(x=>x.a!==x.it.ans);
+    el.innerHTML = `<div class="card">
+      <span class="chip ${tuntas?'ok':'bad'}">${tuntas?'✓ Tuntas':'Belum tuntas'}</span>
+      <div class="row" style="margin-top:12px;gap:24px;align-items:center">
+        <div><div class="muted small">Nilai</div><div class="score" style="color:${tuntas?'var(--ok)':'var(--bad)'}">${nilai}</div></div>
+        <div><b style="font-size:17px">${esc(quiz.name)}</b>${quiz.kelas?' • '+esc(quiz.kelas):''}<br><span class="muted">${benar} benar dari ${QN} soal • KKTP ${KKTP}</span><br><span class="muted small">${new Date().toLocaleString('id-ID')}</span></div>
+      </div>
+      <p style="margin-top:12px">${tuntas?'Kamu sudah memahami dasar-dasar jaringan dengan baik. Pertahankan!':'Pelajari lagi pembahasan soal yang salah di bawah, lalu ulangi praktik yang berkaitan sebelum mencoba lagi.'}</p>
+      ${salah.length?`<h3 style="font-size:16px;margin-top:16px">Pembahasan soal yang belum tepat</h3><div class="review">${salah.map(x=>`<div class="item"><b>${esc(x.it.q)}</b><br>Jawabanmu: ${esc(x.a)}<br>Jawaban benar: <b>${esc(x.it.ans)}</b><br><span class="muted">${esc(x.it.e)}</span></div>`).join('')}</div>`:''}
+      <div class="row no-print" style="margin-top:16px"><button class="btn primary" id="qAgain">Ulangi Evaluasi</button><button class="btn" id="qPrint">Cetak Hasil</button></div>
+    </div>`;
+    $('#qAgain').onclick = () => quizStart(true);
+    $('#qPrint').onclick = () => window.print();
+  }
+}
+
+/* =========================================================
+   9. INISIALISASI
+   ========================================================= */
+function init(){
+  $('#loading').remove();
+  initHome();
+  renderDevices();
+  crimpReset();
+  initTopo();
+  initIp();
+  quizStart(true);
+  updateProgress();
+  $('#tabs').addEventListener('click', e => { const b=e.target.closest('.tab'); if(b) go(b.dataset.page); });
+  document.addEventListener('click', e => { const g=e.target.closest('[data-go]'); if(g && !e.target.closest('#tabs')) go(g.dataset.go); });
+  $('#devGrid').addEventListener('click', e => { const d=e.target.closest('[data-dev]'); if(d) openDevice(d.dataset.dev); });
+  $('#devFilter').addEventListener('click', e => { const b=e.target.closest('[data-f]'); if(!b) return; devFilter=b.dataset.f; $$('#devFilter button').forEach(x=>x.classList.toggle('active',x===b)); renderDevices(); });
+  $('#crimpWork').addEventListener('click', crimpClick);
+  $('#modalClose').addEventListener('click', closeModal);
+  $('#modal').addEventListener('click', e => { if(e.target.id==='modal') closeModal(); });
+  document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+  go((location.hash||'').replace('#','') || 'home');
+}
+loadAssets().then(init);
+</script>
+</body>
+</html>
